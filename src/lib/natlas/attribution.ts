@@ -31,7 +31,7 @@ export const NATLAS_TEAM: TeamMember[] = [
   {
     name: 'Aladejana Aduragbemi Samuel',
     role: 'PG student',
-    affiliation: 'DeltaOS Core',
+    affiliation: 'Department of Linguistics and Languages, AAUA',
   },
 ];
 
