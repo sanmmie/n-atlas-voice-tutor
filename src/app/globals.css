@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Cultural themes.
+ * Each language selection sets data-theme on <html>; every colour in the app is
+ * derived from these tokens so the whole UI re-themes instantly.
+ *
+ * Palette notes (kept deliberately specific, never generic "African" styling):
+ *  - hausa  : Hausa building traditions — adobe/terracotta walls, lattice screens, Sahel gold.
+ *  - igbo   : uli — chalk-white line work on dark cloth, forest green and black.
+ *  - yoruba : adire — indigo-dyed cloth, resist-white patterning, with shrine red accents.
+ */
+:root,
+[data-theme='hausa'] {
+  --surface: 28 22 18;
+  --elevated: 44 32 25;
+  --ink: 250 244 236;
+  --muted: 196 178 156;
+  --accent: 214 106 47;
+  --accent-soft: 74 44 28;
+  --gold: 226 172 76;
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+[data-theme='igbo'] {
+  --surface: 12 24 18;
+  --elevated: 20 38 29;
+  --ink: 240 248 242;
+  --muted: 168 192 176;
+  --accent: 46 160 106;
+  --accent-soft: 18 58 40;
+  --gold: 236 226 208;
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+[data-theme='yoruba'] {
+  --surface: 14 22 48;
+  --elevated: 24 36 70;
+  --ink: 240 244 255;
+  --muted: 168 180 214;
+  --accent: 96 132 232;
+  --accent-soft: 30 44 92;
+  --gold: 226 92 104;
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: rgb(var(--surface));
+  color: rgb(var(--ink));
+  font-family: var(--font-sans);
+  -webkit-text-size-adjust: 100%;
+  /* Keep layout stable on mobile browsers without reflow jank while recording. */
+  overscroll-behavior-y: contain;
+}
+
+:focus-visible {
+  outline: 3px solid rgb(var(--gold));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/10 bg-elevated/70 p-5 shadow-lg shadow-black/30 backdrop-blur-sm;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold transition
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-accent text-black hover:brightness-110;
+  }
+
+  .btn-ghost {
+    @apply btn border border-white/15 bg-white/5 text-ink hover:bg-white/10;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-muted;
+  }
+
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--accent)) transparent;
+  }
+}
+
+/* Users on metered/slow Nigerian mobile networks should still get an instant UI. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

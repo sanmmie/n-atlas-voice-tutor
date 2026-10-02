@@ -1,0 +1,14 @@
+{
+  "$comment": "See README.md in this directory. Add human recordings of the exact strings the tutor speaks most often.",
+  "recording": {
+    "samplerate": 22050,
+    "format": "mp3",
+    "bitrate": "64k"
+  },
+  "phrases": [
+    {
+      "text": "Nọọ! Na-abụ mma nkọwa okwu Igbo gị. Ị dị njikị ịtụla anyị na-ekwu okwu?",
+      "file": "greeting-01.mp3"
+    }
+  ]
+}

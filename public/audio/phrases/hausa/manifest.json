@@ -1,0 +1,15 @@
+{
+  "$comment": "See README.md in this directory. Add human recordings of the exact strings the tutor speaks most often. Files are matched after lowercasing, diacritic stripping and punctuation removal, so a recording only has to match the reply exactly.",
+  "recording": {
+    "samplerate": 22050,
+    "format": "mp3",
+    "bitrate": "64k",
+    "notes": "Record in a quiet room with a close microphone. One file per line of `text`."
+  },
+  "phrases": [
+    {
+      "text": "Sannu! Ku ne mai koyar da harshen Hausa. Ka fa za ka iya magana da ni?",
+      "file": "greeting-01.mp3"
+    }
+  ]
+}
