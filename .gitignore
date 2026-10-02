@@ -21,3 +21,4 @@ data/
 models/
 asr-service/.cache/
 asr-service/samples/
+.env*
