@@ -115,6 +115,30 @@ psql "$DATABASE_URL" -f scripts/schema.sql
 On a single VPS, keep `LOG_DRIVER=jsonl` and `LOG_DIR=/var/lib/natlas-logs`; it is
 append-only, easy to back up, and `npm run export:csv` reads it directly.
 
+### Four project settings that silently break the deployment
+
+All four were hit while deploying this project. Each one produces a build that
+*succeeds* and a site that 404s or refuses connections, which is why they are
+written down here rather than discovered at demo time.
+
+| Setting | Symptom when it is wrong |
+| --- | --- |
+| **Framework preset must be `nextjs`.** With `Other`, `next build` runs and prints every route, but Vercel then serves `./public` instead of the `.next` output. | `NOT_FOUND` on `/` *and* `/api/*`, behind a perfectly green build log |
+| **Vercel Authentication (SSO protection) must be off** for a public submission. The project API reports it as `ssoProtection: { deploymentType: "prod_deployment_urls_and_all_previews" }`. | Judges see a Vercel "Login" page instead of the app |
+| **The Git link must point at *your* repository.** A project reused from an older Bitbucket-linked project keeps that link, so a push to the old repo redeploys your app and leaves a misleading alias behind. | Deployments you did not trigger; a URL named after the wrong project |
+| **Function timeout must exceed your slowest inference.** On Hobby the project reports `functionDefaultTimeout: 10` seconds. `export const maxDuration = 60` in a route is a *request*, not a guarantee — the plan caps it. | Turns cut off mid-reply whenever the N-ATLaS LLM or ASR is cold |
+
+The framework preset is the one that bites hardest when deploying from the CLI,
+because the build log gives no hint that anything is wrong:
+
+```bash
+echo '{"framework":"nextjs"}' > patch.json
+vercel api /v9/projects/<PROJECT_ID> -X PATCH --input patch.json
+```
+
+Deployment protection and the Git link are configured in Project Settings →
+Deployment Protection / Git, or via `vercel api /v9/projects/<PROJECT_ID>/link`.
+
 ---
 
 ## 4. Smoke test the deployed stack

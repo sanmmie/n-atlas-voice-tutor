@@ -10,6 +10,9 @@ Voice-First Access** — *"Build applications for Nigerians who do not type."*
 
 ---
 
+**Live deployment:** <https://n-atlas-voice-tutor-deltaos-core.vercel.app>
+(Vercel, project `deltaos-core/n-atlas-voice-tutor`, auto-deploys from `main`)
+
 ## N-ATLaS integration (the non-negotiable part)
 
 Every model this application calls is an official checkpoint from the `NCAIR1`
