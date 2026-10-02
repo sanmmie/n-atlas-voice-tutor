@@ -13,6 +13,20 @@ Voice-First Access** — *"Build applications for Nigerians who do not type."*
 **Live deployment:** <https://n-atlas-voice-tutor-deltaos-core.vercel.app>
 (Vercel, project `deltaos-core/n-atlas-voice-tutor`, auto-deploys from `main`)
 
+## Team and credits
+
+N-ATLaS Voice Tutor is developed by **DeltaOS Core** in collaboration with the
+**Department of Linguistics and Languages, Adekunle Ajasin University** (AAUA).
+
+| Name | Role | Affiliation |
+| --- | --- | --- |
+| Prof. Semion Olaogun | Academic Lead | Department of Linguistics and Languages, AAUA |
+| Oluwasanmi T. Adebowale | Technical Partner | DeltaOS Core |
+| Aladejana Aduragbemi Samuel | PG student | DeltaOS Core |
+
+Team profiles are also available on the live site at
+<https://n-atlas-voice-tutor-deltaos-core.vercel.app/team>.
+
 ## N-ATLaS integration (the non-negotiable part)
 
 Every model this application calls is an official checkpoint from the `NCAIR1`
@@ -31,8 +45,11 @@ organisation on Hugging Face:
   **[`docs/n-atlas-integration.md`](docs/n-atlas-integration.md)**
 - Challenge rules: <https://ncair.nitda.gov.ng/naic/>
 
-> N-ATLaS is an initiative of the Federal Ministry of Communications, Innovation
-> and Digital Economy, and powered by Awarri Technologies.
+> N-ATLaS is an initiative of the Federal Ministry of Communications,
+> Innovation and Digital Economy, and powered by Awarri Technologies.
+
+> Developed by DeltaOS Core in collaboration with the Department of
+> Linguistics and Languages, AAUA.
 
 There is no GPT-4, Claude, Whisper-from-OpenAI, AssemblyAI, Deepgram or Google STT
 anywhere in the inference path. Three runtime guards enforce this: config
@@ -89,6 +106,7 @@ recorded model evidence comes from the server and cannot be forged by the browse
 src/app/                 Next.js App Router pages and API routes
   page.tsx               language selection
   session/page.tsx       the voice tutor
+  team/page.tsx          team profiles
   validation/page.tsx    live validation dashboard + CSV export
   api/asr                N-ATLaS ASR endpoint
   api/tutor              N-ATLaS LLM endpoint

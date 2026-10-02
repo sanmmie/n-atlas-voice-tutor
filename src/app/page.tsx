@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { MotifBackground } from '@/components/MotifBackground';
 import { LanguagePicker } from '@/components/LanguagePicker';
 import { isLanguageCode, type LanguageCode } from '@/lib/languages';
-import { NATLAS_ATTRIBUTION } from '@/lib/natlas/attribution';
+import { NATLAS_ATTRIBUTION, NATLAS_TEAM_ATTRIBUTION } from '@/lib/natlas/attribution';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +55,11 @@ export default function HomePage() {
 
         <footer className="text-center text-xs leading-relaxed text-muted">
           <p>{NATLAS_ATTRIBUTION}</p>
+          <p className="mt-2">
+            <Link href="/team" className="underline underline-offset-4 hover:text-ink">
+              {NATLAS_TEAM_ATTRIBUTION}
+            </Link>
+          </p>
           <p className="mt-1">
             Tutor behaviour is experimental. Yorùbá responses are noticeably weaker than Hausa and Igbo — see
             the limitations document.

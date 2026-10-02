@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { MotifBackground } from '@/components/MotifBackground';
 import { VoiceTutor } from '@/components/VoiceTutor';
 import { LANGUAGES, LANGUAGE_ORDER, isLanguageCode, type LanguageCode } from '@/lib/languages';
-import { NATLAS_ATTRIBUTION, NATLAS_LLM_MODEL_CARD } from '@/lib/natlas/attribution';
+import { NATLAS_ATTRIBUTION, NATLAS_LLM_MODEL_CARD, NATLAS_TEAM_ATTRIBUTION } from '@/lib/natlas/attribution';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +54,11 @@ export default function SessionPage({ searchParams }: { searchParams: { lang?: s
 
         <footer className="text-center text-[11px] leading-relaxed text-muted">
           <p>{NATLAS_ATTRIBUTION}</p>
+          <p className="mt-1">
+            <Link href="/team" className="underline underline-offset-4 hover:text-ink">
+              {NATLAS_TEAM_ATTRIBUTION}
+            </Link>
+          </p>
           <p className="mt-1">
             N-ATLaS model card:{' '}
             <a href={NATLAS_LLM_MODEL_CARD} className="underline underline-offset-4">

@@ -1,10 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { LANGUAGE_ORDER, LANGUAGES, type LanguageCode } from '@/lib/languages';
 import { clearHistory } from '@/lib/session';
-import { NATLAS_ATTRIBUTION } from '@/lib/natlas/attribution';
+import { NATLAS_ATTRIBUTION, NATLAS_TEAM_ATTRIBUTION } from '@/lib/natlas/attribution';
 
 export function LanguagePicker({ current }: { current: LanguageCode }) {
   const router = useRouter();
@@ -60,6 +61,11 @@ export function LanguagePicker({ current }: { current: LanguageCode }) {
       </ul>
       <p className="mt-6 text-center text-xs leading-relaxed text-muted">
         {NATLAS_ATTRIBUTION}
+      </p>
+      <p className="mt-2 text-center text-xs text-muted">
+        <Link href="/team" className="underline underline-offset-4 hover:text-ink">
+          {NATLAS_TEAM_ATTRIBUTION}
+        </Link>
       </p>
     </div>
   );
