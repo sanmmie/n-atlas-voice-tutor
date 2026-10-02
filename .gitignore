@@ -1,0 +1,24 @@
+node_modules/
+.next/
+out/
+build/
+.env
+.env.local
+.env*.local
+*.log
+npm-debug.log*
+.DS_Store
+.vercel
+next-env.d.ts
+*.tsbuildinfo
+
+# Local interaction log store (real validation logs are exported to validation/*.csv)
+data/
+*.sqlite
+*.sqlite3
+
+# Large local model artefacts / audio scratch
+models/
+asr-service/.cache/
+asr-service/samples/
+.env*

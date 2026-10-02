@@ -1,0 +1,12 @@
+# N-ATLaS ASR service dependencies.
+#
+# torch is installed from the CUDA index on a GPU host; see asr-service/README.md.
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+python-multipart==0.0.17
+transformers==4.46.3
+accelerate==1.1.1
+numpy==2.1.3
+soundfile==0.12.1
+huggingface_hub==0.26.2
+torch==2.5.1

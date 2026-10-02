@@ -1,0 +1,33 @@
+{
+  "name": "n-atlas-voice-tutor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Voice-first Hausa, Igbo and Yoruba language tutor powered by N-ATLaS (NCAIR1/N-ATLaS + NCAIR1 ASR models).",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "export:csv": "node scripts/export-csv.mjs",
+    "validation:report": "node scripts/validation-report.mjs"
+  },
+  "dependencies": {
+    "next": "^14.2.35",
+    "postgres": "3.4.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "20.16.11",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.1",
+    "autoprefixer": "10.4.20",
+    "eslint": "8.57.1",
+    "eslint-config-next": "^14.2.35",
+    "postcss": "8.4.47",
+    "tailwindcss": "3.4.14",
+    "typescript": "5.6.3"
+  }
+}
