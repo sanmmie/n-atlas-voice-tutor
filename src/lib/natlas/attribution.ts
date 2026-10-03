@@ -65,4 +65,4 @@ export const NATLAS_TEAM: TeamMember[] = [
 ];
 
 export const NATLAS_TEAM_ATTRIBUTION =
-  'Developed by DeltaOS Core in collaboration with the Department of Linguistics and Languages, AAUA. See /team for the full team.';
+  'Project team: DeltaOS Core, in collaboration with the Department of Linguistics and Languages, AAUA.';
