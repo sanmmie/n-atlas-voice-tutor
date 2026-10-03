@@ -59,10 +59,24 @@ export async function completeWithNatlas(
   const promptChars = messages.reduce((sum, m) => sum + m.content.length, 0);
 
   try {
-    const response =
-      config.NATLAS_LLM_PROVIDER === 'hf-inference-endpoint'
-        ? await callHfInferenceEndpoint(config.NATLAS_LLM_BASE_URL, config.NATLAS_LLM_MODEL, config.NATLAS_LLM_API_KEY, messages, options, controller.signal)
-        : await callOpenAiCompatible(config.NATLAS_LLM_BASE_URL, config.NATLAS_LLM_MODEL, config.NATLAS_LLM_API_KEY, messages, options, controller.signal);
+    let response: RawCompletion | undefined;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        response =
+          config.NATLAS_LLM_PROVIDER === 'hf-inference-endpoint'
+            ? await callHfInferenceEndpoint(config.NATLAS_LLM_BASE_URL, config.NATLAS_LLM_MODEL, config.NATLAS_LLM_API_KEY, messages, options, controller.signal)
+            : await callOpenAiCompatible(config.NATLAS_LLM_BASE_URL, config.NATLAS_LLM_MODEL, config.NATLAS_LLM_API_KEY, messages, options, controller.signal);
+        break;
+      } catch (error) {
+        const retryableStatus = error instanceof NatlasError && [429, 502, 503, 504].includes(error.status);
+        const retryableNetworkError = error instanceof TypeError;
+        if (controller.signal.aborted || (!retryableStatus && !retryableNetworkError) || attempt === 2) {
+          throw error;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 250 * 2 ** attempt));
+      }
+    }
+    if (!response) throw new Error('N-ATLaS request completed without a response.');
 
     const latencyMs = Date.now() - startedAt;
     return {
