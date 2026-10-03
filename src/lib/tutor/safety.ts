@@ -1,4 +1,4 @@
-import { LANGUAGES, type LanguageCode } from '../languages';
+import type { LanguageCode } from '../languages';
 
 /**
  * Topic guard for the tutor.
@@ -31,7 +31,6 @@ const SENSITIVE_TERMS = [
   'moslem',
   'muslim',
   'islam',
-  'christianity',
   'church',
   'mosque',
   'jihad',
@@ -100,20 +99,6 @@ const REFUSALS: Record<LanguageCode, string> = {
   yoruba: 'Èyí kì í ṣe àwó ọjọ́ ọrọ̀ kì í bá àìrẹ́sẹ̀. Ṣé a tún lẹ́yìn kíkẹ́kọ̀ ọ̀rọ̀ Yorùbá?',
 };
 
-const REFUSALS_EN: Record<LanguageCode, string> = {
-  hausa: 'I would rather not talk about that topic. Shall we keep practising Hausa?',
-  igbo: 'Ị bị anyị ịjị ọrụ aka ịjighị anyị bụ isi okwu dị egwu. Jị ọzọ anyị ịga nkọwa okwu Igbo?',
-  yoruba: 'Èyí kì í ṣe àwó ọjọ́ ọrọ̀ kì í bá àìrẹ́sẹ̀. Ṣé a tún lẹ́yìn kíkẹ́kọ̀ ọ̀rọ̀ Yorùbá?',
-};
-
 export function refusalFor(language: LanguageCode): string {
   return REFUSALS[language];
-}
-
-export function refusalEnglishFor(language: LanguageCode): string {
-  return REFUSALS_EN[language];
-}
-
-export function languageName(language: LanguageCode): string {
-  return LANGUAGES[language].englishName;
 }

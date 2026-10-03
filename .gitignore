@@ -21,4 +21,12 @@ data/
 models/
 asr-service/.cache/
 asr-service/samples/
-.env*
+__pycache__/
+*.py[cod]
+
+# Real secrets are never committed...
+.env
+.env.local
+.env.*.local
+# ...but the template README.md and docs/deployment.md tell you to copy must be.
+!.env.example

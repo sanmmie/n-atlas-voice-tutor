@@ -4,8 +4,8 @@ import type { TurnMessage } from '@/lib/session';
 
 interface Props {
   messages: TurnMessage[];
-  pendingTranscript: string;
   languageName: string;
+  languageTag: string;
   onRate: (index: number, rating: number) => void;
 }
 
@@ -16,8 +16,8 @@ interface Props {
  * are deaf or hard of hearing, it survives a broken N-ATLaS ASR turn (the text is
  * still on screen), and it gives a reviewable record of what was actually said.
  */
-export function TranscriptPanel({ messages, pendingTranscript, languageName, onRate }: Props) {
-  if (messages.length === 0 && !pendingTranscript) {
+export function TranscriptPanel({ messages, languageName, languageTag, onRate }: Props) {
+  if (messages.length === 0) {
     return (
       <div className="card text-sm text-muted">
         Your conversation will appear here, turn by turn. Nothing here is stored on your
@@ -59,20 +59,12 @@ export function TranscriptPanel({ messages, pendingTranscript, languageName, onR
               </span>
             ) : null}
           </div>
-          <p lang={message.role === 'user' ? undefined : languageName} className="whitespace-pre-wrap text-[15px] leading-relaxed">
+          <p lang={message.role === 'user' ? undefined : languageTag} className="whitespace-pre-wrap text-[15px] leading-relaxed">
             {message.content}
           </p>
         </li>
       ))}
 
-      {pendingTranscript ? (
-        <li className="card !p-4 opacity-70">
-          <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgb(var(--accent))' }}>
-            Transcribing
-          </span>
-          <p className="mt-1 text-[15px]">{pendingTranscript}</p>
-        </li>
-      ) : null}
     </ol>
   );
 }

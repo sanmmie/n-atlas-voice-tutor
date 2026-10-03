@@ -144,7 +144,8 @@ decorative, not claimed to be reproductions of any specific cloth or carving.
 - Audio is transmitted to the N-ATLaS ASR service for transcription and is **not**
   persisted by this application. Only text, timings and model ids are logged.
 - No IP address, phone number, email or name is stored.
-- `/api/export` requires `ADMIN_TOKEN` because rows contain full transcripts.
+- `/validation` and `/api/export` require `ADMIN_TOKEN`; the dashboard checks it
+  before reading learner-derived summaries, and exports contain full transcripts.
 
 ## Low-bandwidth choices
 

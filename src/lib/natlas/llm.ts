@@ -29,8 +29,22 @@ export class NatlasError extends Error {
   }
 }
 
+/**
+ * The N-ATLaS chat template takes the current date as a template argument, and
+ * the official model card passes it as `datetime.now().strftime('%d %b %Y')`
+ * (e.g. "03 Oct 2026"). It is rendered verbatim into the Llama-3 system prompt
+ * as "Today Date: ...", so the format is worth matching rather than inventing.
+ */
 function todayStamp(): string {
-  return new Date().toISOString().slice(0, 10);
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  const now = new Date();
+  const day = String(now.getUTCDate()).padStart(2, '0');
+  const month = months[now.getUTCMonth()];
+  const year = now.getUTCFullYear();
+  return `${day} ${month} ${year}`;
 }
 
 /**
@@ -121,7 +135,8 @@ async function callOpenAiCompatible(
     max_tokens: options.maxTokens,
     temperature: options.temperature,
     stream: false,
-    // Llama-3 chat template: keep the turn prefix explicit.
+    // Llama-3 chat template: the N-ATLaS template takes the current date as an
+    // argument. llama.cpp's `llama-server` and vLLM both forward this.
     chat_template_kwargs: { date_string: todayStamp() },
   });
 
@@ -155,6 +170,18 @@ async function callOpenAiCompatible(
   return { text: cleanCompletion(text) };
 }
 
+/**
+ * Hugging Face Inference Endpoint transport.
+ *
+ * NOTE, deliberately recorded rather than hidden: this transport does NOT send
+ * `chat_template_kwargs.date_string`. Text Generation Inference applies the
+ * checkpoint's chat template itself and rejects unknown request fields, so the
+ * two transports render slightly different system prompts — the OpenAI-compatible
+ * one carries an explicit "Today Date: ...", this one carries TGI's default.
+ * The tutor prompt does not depend on the date, so the behaviour is equivalent
+ * for this application; it is documented because `docs/n-atlas-integration.md`
+ * claims the two paths are interchangeable.
+ */
 async function callHfInferenceEndpoint(
   baseUrl: string,
   model: string,

@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { MotifBackground } from '@/components/MotifBackground';
 import { LanguagePicker } from '@/components/LanguagePicker';
 import { isLanguageCode, type LanguageCode } from '@/lib/languages';
-import { NATLAS_ATTRIBUTION, NATLAS_TEAM_ATTRIBUTION } from '@/lib/natlas/attribution';
+import { NATLAS_ALL_ATTRIBUTIONS, NATLAS_TEAM_ATTRIBUTION } from '@/lib/natlas/attribution';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,8 +25,8 @@ export default function HomePage() {
             <span className="block text-accent">by speaking</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted sm:text-base">
-            No typing, no account, no data bundle. Choose a language, hold the microphone, and talk with a
-            tutor powered by Nigeria&apos;s N-ATLaS speech recognition and language models.
+            No typing or account required. This mobile web app is designed for low-data use. Choose a
+            language, hold the microphone, and talk with a tutor powered by Nigeria&apos;s N-ATLaS models.
           </p>
         </header>
 
@@ -46,15 +46,15 @@ export default function HomePage() {
           <div className="card !p-4">
             <strong className="block text-ink">
               <Link href="/validation" className="underline underline-offset-4">
-                Live validation
+                Validation report
               </Link>
             </strong>
-            Real learner sessions, exported for the NAIC submission.
+            Restricted evidence dashboard for the NAIC submission.
           </div>
         </section>
 
         <footer className="text-center text-xs leading-relaxed text-muted">
-          <p>{NATLAS_ATTRIBUTION}</p>
+          {NATLAS_ALL_ATTRIBUTIONS.map((attribution) => <p key={attribution}>{attribution}</p>)}
           <p className="mt-2">
             <Link href="/team" className="underline underline-offset-4 hover:text-ink">
               {NATLAS_TEAM_ATTRIBUTION}

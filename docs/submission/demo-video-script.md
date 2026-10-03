@@ -10,7 +10,7 @@ except for the health shot below — it makes the proof trivial.
 
 | # | Time | Shot | Voiceover / what to show |
 | --- | --- | --- | --- |
-| 1 | 0:00-0:30 | Landing page, language selection. Click Yorùbá, then Hausa, then Igbo. | "Nigerians who do not type should still be able to learn. Pick a language, press one button, talk." Show the theme change per language. |
+| 1 | 0:00-0:30 | Open the mobile-first web app in a phone browser; show language selection. Click Yorùbá, then Hausa, then Igbo. | "This is a low-bandwidth mobile web application, not a native app or messaging bot. Nigerians who do not type can choose a language, press one button, and speak. Audio is compressed before upload; an internet connection is still required." Show the theme change per language. |
 | 2 | 0:30-0:55 | Terminal: `curl -s .../api/health \| jq` | "Before anything else, here is the integration. The language model is `NCAIR1/N-ATLaS`. The loaded speech checkpoints are `NCAIR1/Hausa-ASR`, `NCAIR1/Igbo-ASR`, `NCAIR1/Yoruba-ASR`. These are the official NCAIR checkpoints — there is no wrapped general-purpose model anywhere in this stack." |
 | 3 | 0:55-1:10 | Terminal: `curl -s -F 'audio=@hausa-clip.webm' -F 'language=hausa' .../api/asr \| jq` | "One call to the official ASR endpoint, on a real Hausa recording. Note the `model` field in the response." |
 | 4 | 1:10-2:30 | **Full Hausa conversation, live.** 4-6 turns of real speech. Keep the EvidenceStrip in frame. | Let the audio run. Narrate sparingly: "The tutor answered in Hausa, corrected my word order, and asked one question back. The panel on top shows the ASR checkpoint and the LLM checkpoint with their latencies for every single turn." |
@@ -30,4 +30,6 @@ except for the health shot below — it makes the proof trivial.
       question "was that a scripted turn?".
 - [ ] Show a real transcript panel with real learner text, not a placeholder.
 - [ ] Repository and live URL on screen at least once, legibly.
+- [ ] Identify the delivery channel accurately as mobile web; do not imply offline,
+      native-app, WhatsApp, USSD, or IVR support.
 - [ ] Attribution card is the last thing on screen.

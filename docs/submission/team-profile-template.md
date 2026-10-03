@@ -27,6 +27,15 @@
 | Languages covered | Hausa, Igbo, Yorùbá |
 | N-ATLaS models used | `NCAIR1/N-ATLaS`, `NCAIR1/Hausa-ASR`, `NCAIR1/Igbo-ASR`, `NCAIR1/Yoruba-ASR` |
 
+## Delivery channel
+
+Describe this artefact accurately as a **mobile-first web application** in a
+browser. It is not a native mobile app, WhatsApp voice-note bot, USSD service, or
+IVR system. Explain the low-bandwidth choices that make the web channel suitable:
+compressed browser audio, a lightweight interface, short recordings, and a typed
+fallback. Be clear that live voice turns still require an internet connection and
+HTTPS outside localhost.
+
 ## One-paragraph summary
 
 [Who you are, what you built, in three or four sentences. Written for a panel that

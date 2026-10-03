@@ -67,15 +67,15 @@ MODEL_BY_LANGUAGE: Dict[str, str] = {
 # Aliases accepted from the client.
 LANGUAGE_ALIASES: Dict[str, str] = {
     "hausa": "ha",
-    "ha-NG": "ha",
+    "ha-ng": "ha",
     "igbo": "ig",
-    "ig-NG": "ig",
+    "ig-ng": "ig",
     "yoruba": "yo",
-    "yo-NG": "yo",
+    "yo-ng": "yo",
     "english": "en-ng",
+    "en": "en-ng",
     "naija": "en-ng",
 }
-
 SAMPLE_RATE = 16_000
 CHUNK_SECONDS = 25  # under the checkpoints' hard 30 s window, leaving headroom
 API_KEY = os.environ.get("NATLAS_ASR_API_KEY")

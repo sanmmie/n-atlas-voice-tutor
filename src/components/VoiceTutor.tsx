@@ -34,7 +34,6 @@ export function VoiceTutor({ language }: { language: LanguageCode }) {
   const [state, setState] = useState<RecorderState>('idle');
   const [level, setLevel] = useState(0);
   const [messages, setMessages] = useState<TurnMessage[]>([]);
-  const [pendingTranscript, setPendingTranscript] = useState('');
   const [evidence, setEvidence] = useState<Evidence | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [typed, setTyped] = useState('');
@@ -94,8 +93,6 @@ export function VoiceTutor({ language }: { language: LanguageCode }) {
     async (payload: { blob?: Blob; durationSeconds?: number }) => {
       setError(null);
       setState('thinking');
-      setPendingTranscript('');
-
       const historyForModel = historyRef.current
         .filter((message) => message.role === 'user' || message.role === 'assistant')
         .map((message) => ({ role: message.role, content: message.content }));
@@ -264,8 +261,8 @@ export function VoiceTutor({ language }: { language: LanguageCode }) {
 
       <TranscriptPanel
         messages={messages}
-        pendingTranscript={pendingTranscript}
         languageName={definition.englishName}
+        languageTag={definition.bcp47}
         onRate={rate}
       />
 

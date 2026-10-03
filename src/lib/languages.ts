@@ -11,8 +11,8 @@ export interface LanguageDefinition {
   bcp47: string;
   /** Official N-ATLaS speech-recognition weights used for this language. */
   asrModel: string;
-  /** IS0 639-3 code carried by the N-ATLaS ASR models. */
-  iso6393: string;
+  /** Language key accepted by this app's N-ATLaS ASR service. */
+  asrLanguageKey: string;
   theme: LanguageCode;
   /** Short cultural note shown on the selection card. */
   culture: string;
@@ -36,7 +36,7 @@ export const LANGUAGES: Record<LanguageCode, LanguageDefinition> = {
     englishName: 'Hausa',
     bcp47: 'ha-NG',
     asrModel: 'NCAIR1/Hausa-ASR',
-    iso6393: 'ha',
+    asrLanguageKey: 'ha',
     theme: 'hausa',
     culture: 'Hausa — geometric latticework and Sahel architecture.',
     greeting: 'Sannu! Ku ne mai koyar da harshen Hausa. Ka fa za ka iya magana da ni?',
@@ -70,7 +70,7 @@ export const LANGUAGES: Record<LanguageCode, LanguageDefinition> = {
     englishName: 'Igbo',
     bcp47: 'ig-NG',
     asrModel: 'NCAIR1/Igbo-ASR',
-    iso6393: 'ig',
+    asrLanguageKey: 'ig',
     theme: 'igbo',
     culture: 'Igbo — uli-inspired chalk line work and forest tones.',
     greeting:
@@ -105,7 +105,7 @@ export const LANGUAGES: Record<LanguageCode, LanguageDefinition> = {
     englishName: 'Yoruba',
     bcp47: 'yo-NG',
     asrModel: 'NCAIR1/Yoruba-ASR',
-    iso6393: 'yo',
+    asrLanguageKey: 'yo',
     theme: 'yoruba',
     culture: 'Yorùbá — adire indigo cloth patterning.',
     greeting:

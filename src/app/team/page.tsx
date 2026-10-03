@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { MotifBackground } from '@/components/MotifBackground';
 import {
-  NATLAS_ATTRIBUTION,
+  NATLAS_ALL_ATTRIBUTIONS,
   NATLAS_LLM_MODEL_CARD,
+  NATLAS_TEAM_ATTRIBUTION,
   NATLAS_TEAM,
 } from '@/lib/natlas/attribution';
 import { isLanguageCode, type LanguageCode } from '@/lib/languages';
@@ -54,7 +55,9 @@ export default function TeamPage() {
 
         <section className="card">
           <h2 className="font-semibold">Acknowledgements</h2>
-          <p className="mt-2 text-sm text-muted">{NATLAS_ATTRIBUTION}</p>
+          {NATLAS_ALL_ATTRIBUTIONS.map((attribution) => (
+            <p key={attribution} className="mt-2 text-sm text-muted">{attribution}</p>
+          ))}
           <p className="mt-2 text-sm text-muted">
             N-ATLaS model card:{' '}
             <a
@@ -67,7 +70,7 @@ export default function TeamPage() {
         </section>
 
         <footer className="text-center text-xs text-muted">
-          <p>{NATLAS_ATTRIBUTION}</p>
+          <p>{NATLAS_TEAM_ATTRIBUTION}</p>
         </footer>
       </main>
     </>

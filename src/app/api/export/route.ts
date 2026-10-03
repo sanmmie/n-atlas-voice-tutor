@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { timingSafeEqual } from 'node:crypto';
+import { isValidAdminToken } from '@/lib/admin';
 import { readMergedInteractions, summarise, toCsv } from '@/lib/store/interactions';
 
 export const runtime = 'nodejs';
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       { status: 503 },
     );
   }
-  if (!provided || !safeEqual(provided, adminToken)) {
+  if (!isValidAdminToken(provided, adminToken)) {
     return NextResponse.json({ error: 'Invalid export token.' }, { status: 401 });
   }
 
@@ -43,11 +43,4 @@ export async function GET(request: Request) {
       'x-interaction-count': String(rows.length),
     },
   });
-}
-
-function safeEqual(a: string, b: string): boolean {
-  const left = Buffer.from(a);
-  const right = Buffer.from(b);
-  if (left.length !== right.length) return false;
-  return timingSafeEqual(left, right);
 }

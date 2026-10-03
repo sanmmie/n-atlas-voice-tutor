@@ -76,7 +76,10 @@ Two transports are supported, both serving the same official weights:
    the current date as a template argument (visible in the official usage snippet
    on the model card).
 2. **`hf-inference-endpoint`** — a Hugging Face Inference Endpoint running
-   `NCAIR1/N-ATLaS`, at `POST {NATLAS_LLM_BASE_URL}/v1/chat/completions`.
+  `NCAIR1/N-ATLaS`, at `POST {NATLAS_LLM_BASE_URL}/v1/chat/completions`. This
+  transport does not send `chat_template_kwargs.date_string`: TGI applies its
+  own chat template defaults and may render a different system prompt than the
+  OpenAI-compatible transport. Tutor behavior does not depend on that date.
 
 Minimal working example (this is what `/api/tutor` does):
 
@@ -108,12 +111,10 @@ curl -s http://localhost:3000/api/tutor \
 | `src/lib/tutor/turn.ts:100` | `// ---- N-ATLaS ASR INVOCATION #1 (official NCAIR1 ASR checkpoint) ----` |
 | `src/app/api/asr/route.ts:44` | `// N-ATLaS ASR INVOCATION (official NCAIR1/<Language>-ASR checkpoint).` |
 
-Two transports, both running N-ATLaS checkpoints:
-
-1. **`service`** (default) — the FastAPI service in `asr-service/`, which loads
-   the NCAIR1 repos directly with `transformers` on a GPU.
-2. **`hf-router`** — Hugging Face serverless inference on the same repos:
-   `POST https://router.huggingface.co/hf-inference/models/NCAIR1/Hausa-ASR`.
+The **`service`** transport uses the FastAPI service in `asr-service/`, which
+loads the NCAIR1 repos directly with `transformers` on a GPU. There is no
+Hugging Face serverless transport: these gated checkpoints are not deployed by
+an Inference Provider.
 
 The checkpoint is selected from the learner's chosen language, never from the
 audio itself. Minimum working example:
@@ -147,7 +148,20 @@ Three independent guards make it impossible to accidentally wrap another model:
 3. **Service-level enforcement** — `asr-service/app.py::assert_official()` raises
    before loading any checkpoint outside `NCAIR1/`.
 
-### 2.4 Runtime evidence in the product
+### 2.4 Required checkpoint attribution
+
+The app displays the model-card attribution for every checkpoint it uses:
+
+- N-ATLaS: “N-ATLaS is an initiative of the Federal Ministry of Communications,
+  Innovation and Digital Economy, and powered by Awarri Technologies.”
+- Hausa-ASR: “Hausa-ASR is powered by Awarri Technologies in an initiative of
+  the Federal Ministry of Communications, Innovation and Digital Economy.”
+- Igbo-ASR: “Igbo-ASR is powered by Awarri Technologies in an initiative of
+  the Federal Ministry of Communications, Innovation and Digital Economy.”
+- Yoruba-ASR: “Yoruba-ASR is developed by Awarri Technologies in partnership
+  with the Federal Government of Nigeria.”
+
+### 2.5 Runtime evidence in the product
 
 - The **EvidenceStrip** panel at the top of every session screen shows the ASR
   checkpoint, the LLM checkpoint, their latencies and the transport for the last

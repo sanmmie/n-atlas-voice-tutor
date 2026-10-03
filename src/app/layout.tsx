@@ -2,14 +2,14 @@ import type { Metadata, Viewport } from 'next';
 import { cookies } from 'next/headers';
 import './globals.css';
 import { isLanguageCode, type LanguageCode } from '@/lib/languages';
-import { NATLAS_ATTRIBUTION } from '@/lib/natlas/attribution';
+import { NATLAS_ALL_ATTRIBUTIONS } from '@/lib/natlas/attribution';
 
 export const metadata: Metadata = {
   title: 'N-ATLaS Voice Tutor — Hausa, Igbo and Yorùbá by speech',
   description:
     'A voice-first language tutor for Hausa, Igbo and Yorùbá, built on Nigeria’s N-ATLaS speech recognition and language models for the NAIC 2026 Voice-First Access problem statement.',
   applicationName: 'N-ATLaS Voice Tutor',
-  other: { 'n-atlas-attribution': NATLAS_ATTRIBUTION },
+  other: { 'n-atlas-attribution': NATLAS_ALL_ATTRIBUTIONS.join(' ') },
 };
 
 export const viewport: Viewport = {

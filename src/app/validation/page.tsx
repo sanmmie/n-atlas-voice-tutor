@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import { isValidAdminToken } from '@/lib/admin';
 import { readMergedInteractions, summarise, type InteractionLog } from '@/lib/store/interactions';
-import { NATLAS_ATTRIBUTION, NATLAS_TEAM_ATTRIBUTION } from '@/lib/natlas/attribution';
+import { NATLAS_ALL_ATTRIBUTIONS, NATLAS_TEAM_ATTRIBUTION } from '@/lib/natlas/attribution';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -17,6 +18,26 @@ export default async function ValidationPage({
 }: {
   searchParams: { token?: string };
 }) {
+  const token = searchParams.token;
+  if (!isValidAdminToken(token)) {
+    return (
+      <main id="main" className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-6 px-5 py-10">
+        <header>
+          <Link href="/" className="text-xs text-muted underline underline-offset-4 hover:text-ink">
+            ← Back to the tutor
+          </Link>
+          <h1 className="mt-3 text-3xl font-bold" style={{ fontFamily: 'var(--font-display)' }}>
+            Real-world validation
+          </h1>
+        </header>
+        <p role="alert" className="card text-sm text-muted">
+          This validation report is restricted. Configure <code>ADMIN_TOKEN</code> and open this page with
+          the matching token to view the report.
+        </p>
+      </main>
+    );
+  }
+
   let rows: InteractionLog[] = [];
   let failure: string | null = null;
 
@@ -27,8 +48,6 @@ export default async function ValidationPage({
   }
 
   const summary = summarise(rows);
-  const token = searchParams.token;
-
   return (
     <main id="main" className="mx-auto flex min-h-dvh w-full max-w-4xl flex-col gap-6 px-5 py-10">
       <header>
@@ -137,7 +156,7 @@ export default async function ValidationPage({
       </section>
 
       <footer className="text-center text-[11px] text-muted">
-        <p>{NATLAS_ATTRIBUTION}</p>
+        {NATLAS_ALL_ATTRIBUTIONS.map((attribution) => <p key={attribution}>{attribution}</p>)}
         <p className="mt-1">
           <Link href="/team" className="underline underline-offset-4 hover:text-ink">
             {NATLAS_TEAM_ATTRIBUTION}

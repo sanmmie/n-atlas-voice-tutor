@@ -33,12 +33,10 @@ const envSchema = z.object({
   NATLAS_LLM_TIMEOUT_MS: z.coerce.number().int().positive().default(120_000),
 
   // ---- N-ATLaS ASR (NCAIR1/{Hausa,Igbo,Yoruba}-ASR) ----
-  NATLAS_ASR_PROVIDER: z.enum(['service', 'hf-router']).default('service'),
+  NATLAS_ASR_PROVIDER: z.literal('service').default('service'),
   /** This app's own thin N-ATLaS ASR service (see asr-service/). */
   NATLAS_ASR_BASE_URL: z.string().url().default('http://127.0.0.1:8000'),
   NATLAS_ASR_API_KEY: z.string().optional(),
-  /** Required for hf-router access to the gated N-ATLaS checkpoints. */
-  HF_TOKEN: z.string().optional(),
   NATLAS_ASR_TIMEOUT_MS: z.coerce.number().int().positive().default(120_000),
   /** WebM/Opus is what MediaRecorder produces on most Android + Chrome. */
   NATLAS_ASR_MIME: z.string().default('audio/webm;codecs=opus'),
@@ -75,10 +73,6 @@ export function getConfig(): NatlasConfig {
 
   if (parsed.data.LOG_DRIVER === 'postgres' && !parsed.data.DATABASE_URL) {
     throw new Error('LOG_DRIVER=postgres requires DATABASE_URL.');
-  }
-
-  if (parsed.data.NATLAS_ASR_PROVIDER === 'hf-router' && !parsed.data.HF_TOKEN) {
-    throw new Error('NATLAS_ASR_PROVIDER=hf-router requires HF_TOKEN.');
   }
 
   cached = { ...parsed.data, llmModelIsOfficial: true };

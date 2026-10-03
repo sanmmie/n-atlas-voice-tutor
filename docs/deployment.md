@@ -161,7 +161,9 @@ curl -s -o interactions.csv \
 ```
 
 `/api/health` must report `NCAIR1/N-ATLaS` and at least three loaded `NCAIR1/` ASR
-checkpoints before you record the demo video.
+checkpoints before you record the demo video or invite validation learners. The
+public page can load while this endpoint is unhealthy; only `ok: true` confirms
+the inference stack is ready.
 
 ---
 
@@ -175,7 +177,7 @@ checkpoints before you record the demo video.
 - **Do not log audio.** The app sends audio to the ASR service and discards it; the
   service likewise holds no audio on disk. Verify this stays true if you add
   debugging.
-- **Rotate `ADMIN_TOKEN`** before sharing the deployment URL: it is the only thing
-  protecting full transcripts in `/api/export`.
+- **Set and rotate `ADMIN_TOKEN`** before sharing the validation URL: it protects
+  both the `/validation` dashboard and full-transcript exports from `/api/export`.
 - **Back up the log directory** daily during the validation window. It is the
   evidence the submission depends on, and it lives in one JSONL file.

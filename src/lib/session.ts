@@ -63,12 +63,6 @@ export function clearHistory(): void {
   window.localStorage.removeItem(HISTORY_KEY);
 }
 
-export function markAuthenticated(): void {
-  if (typeof window === 'undefined') return;
-  const current = getOrCreateUserId();
-  window.localStorage.setItem(USER_KEY, current);
-}
-
 function randomId(length: number): string {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
   const bytes = new Uint8Array(length);

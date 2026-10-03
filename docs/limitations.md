@@ -31,6 +31,7 @@ project and recorded in `validation/`.
 | **No TTS model** | See `docs/tts.md`. Yorùbá in particular frequently falls back to a non-native browser voice. |
 | **No speaker diarisation** | One voice per utterance; the tutor cannot tell two people apart. |
 | **No offline mode** | Every turn needs a network round-trip. On a poor connection the learner waits; the app shows a "thinking" state but cannot queue or retry automatically. |
+| **PostgreSQL connections are not pooled** | The validation-scale driver opens and closes a connection for each read or write. This is adequate for the planned pilot, but should be replaced with a managed pool or persistent client before sustained high concurrency near the 1000-user licence cap. |
 | **Accuracy figures are per-language averages** | Overall quality is dominated by the better languages. Per-language results are always reported separately. |
 
 ## Ethical limitations

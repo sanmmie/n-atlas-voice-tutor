@@ -1,4 +1,4 @@
-import { appendFile, mkdir, readFile, readdir } from 'node:fs/promises';
+import { appendFile, mkdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import postgres from 'postgres';
@@ -86,17 +86,10 @@ class JsonlDriver implements Driver {
 }
 
 class PostgresDriver implements Driver {
-  private rows: InteractionLog[] = [];
-
   constructor(private readonly connectionString: string) {}
 
-  private sql() {
-    return postgres;
-  }
-
   async append(record: InteractionLog): Promise<void> {
-    const sql = this.sql();
-    const client = sql(this.connectionString, { max: 1 });
+    const client = postgres(this.connectionString, { max: 1 });
     try {
       await client`
         insert into interactions (
@@ -118,9 +111,7 @@ class PostgresDriver implements Driver {
   }
 
   async readAll(): Promise<InteractionLog[]> {
-    const rows = this.rows;
-    const sql = this.sql();
-    const client = sql(this.connectionString, { max: 1 });
+    const client = postgres(this.connectionString, { max: 1 });
     try {
       const result = await client<Record<string, unknown>[]>`
         select * from interactions order by timestamp asc
@@ -277,16 +268,6 @@ export async function readMergedInteractions(): Promise<InteractionLog[]> {
       error: entry.error ?? row.error,
     };
   });
-}
-
-/** All JSONL shards in the log directory, newest file last. */
-export async function readInteractionFiles(dir: string): Promise<string[]> {
-  try {
-    const entries = await readdir(dir);
-    return entries.filter((name) => name.endsWith('.jsonl')).map((name) => path.join(dir, name));
-  } catch {
-    return [];
-  }
 }
 
 /* ---------------------------------------------------------------------- CSV */

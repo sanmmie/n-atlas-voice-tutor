@@ -93,7 +93,8 @@ recorded model evidence comes from the server and cannot be forged by the browse
   model call, with neutral in-language redirects.
 - **Interaction logging and CSV export.** Timestamp, language, both transcripts,
   session duration, learner id, both N-ATLaS checkpoint ids, latencies, TTS engine,
-  connection type. Exportable at `/validation` and `/api/export`.
+  connection type. The admin-token-protected dashboard and export are available
+  at `/validation` and `/api/export`.
 - **Guest mode.** No account, no login wall. Progress lives in `localStorage`.
 - **Low bandwidth.** No web fonts, no icon library, ~99 kB first load, compressed
   audio upload, text-first fallback.
@@ -107,7 +108,7 @@ src/app/                 Next.js App Router pages and API routes
   page.tsx               language selection
   session/page.tsx       the voice tutor
   team/page.tsx          team profiles
-  validation/page.tsx    live validation dashboard + CSV export
+  validation/page.tsx    restricted validation dashboard + CSV export
   api/asr                N-ATLaS ASR endpoint
   api/tutor              N-ATLaS LLM endpoint
   api/turn               ASR + LLM + logging, the production path
@@ -166,6 +167,10 @@ npm run dev
 ```
 
 Open <http://localhost:3000>, pick a language, allow microphone access, and speak.
+
+The example config uses local endpoint defaults so the interface can start before
+inference services are available; `/api/health` remains unhealthy until both
+N-ATLaS endpoints are configured and loaded.
 
 Microphone capture requires HTTPS on anything other than `localhost`, so use a
 tunnel (e.g. `cloudflared tunnel --url http://localhost:3000`) when testing on

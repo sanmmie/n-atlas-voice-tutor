@@ -4,7 +4,7 @@ Deadline: **12 October 2026, 23:59 WAT**. Track A = Academia & Research.
 
 | # | Component | Status | Where it lives | Blocked on |
 | --- | --- | --- | --- | --- |
-| 1 | Working artefact (deployed app + public repo) | Build ready, **not deployed** | this repository | HF access, GPU endpoint, Vercel account |
+| 1 | Working artefact (deployed app + public repo) | Deployed; public page responds, **`/api/health` returned HTTP 503 on 2026-10-03** | [Live application](https://n-atlas-voice-tutor-deltaos-core.vercel.app), this repository | Healthy LLM and ASR endpoints |
 | 2 | N-ATLaS integration evidence | **Done** | [`docs/n-atlas-integration.md`](../n-atlas-integration.md) | — |
 | 3 | Real-world validation, 50+ interactions | **Tooling done, data outstanding** | `validation/` | real learners |
 | 4 | Technical documentation | **Done** | `README.md`, [`architecture.md`](../architecture.md), [`deployment.md`](../deployment.md), [`limitations.md`](../limitations.md) | — |
@@ -14,15 +14,16 @@ Deadline: **12 October 2026, 23:59 WAT**. Track A = Academia & Research.
 
 ## Order of work
 
-The dependency chain is strictly linear. Everything after step 2 is blocked by
-having a live deployment.
+The app is deployed. The next gate is a healthy inference stack; do not record a
+working end-to-end demo or recruit validation learners until `/api/health` returns
+`ok: true`.
 
-1. **Accept the N-ATLaS licence** at <https://huggingface.co/N-ATLaS> (gated repo)
-   and create an HF token.
+1. **Accept the N-ATLaS licence conditions** on all five gated NCAIR1 repos listed
+   in `.env.example`, using the account that will download the weights.
 2. **Stand up the LLM endpoint** (`llama-server`, vLLM, HF Inference Endpoint, or
    Modal) — [`deployment.md` §1](../deployment.md#1-n-atlas-llm-endpoint).
 3. **Stand up the ASR service** on a GPU box — [`deployment.md` §2](../deployment.md#2-n-atlas-asr-service).
-4. **Deploy the app**, with `ADMIN_TOKEN` set, and confirm
+4. **Restore inference health**, set `ADMIN_TOKEN` on the deployed app, and confirm
    `GET /api/health` returns `ok: true` with at least three loaded `NCAIR1/` ASR
    checkpoints.
 5. **Record the demo video** while the deployment is warm.

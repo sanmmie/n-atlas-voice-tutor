@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { LANGUAGE_ORDER, LANGUAGES, type LanguageCode } from '@/lib/languages';
 import { clearHistory } from '@/lib/session';
-import { NATLAS_ATTRIBUTION } from '@/lib/natlas/attribution';
 
 export function LanguagePicker({ current }: { current: LanguageCode }) {
   const router = useRouter();
@@ -58,9 +57,6 @@ export function LanguagePicker({ current }: { current: LanguageCode }) {
           );
         })}
       </ul>
-      <p className="mt-6 text-center text-xs leading-relaxed text-muted">
-        {NATLAS_ATTRIBUTION}
-      </p>
     </div>
   );
 }

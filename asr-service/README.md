@@ -2,7 +2,7 @@
 
 FastAPI wrapper around the **official N-ATLaS speech recognition checkpoints**:
 
-| Language | Checkpoint | ISO 639-3 |
+| Language | Checkpoint | ASR language key |
 | --- | --- | --- |
 | Hausa | `NCAIR1/Hausa-ASR` | `ha` |
 | Igbo | `NCAIR1/Igbo-ASR` | `ig` |
@@ -21,9 +21,6 @@ outside the `NCAIR1/` organisation.
   your browser before `huggingface_hub` can download weights.
 - None of the N-ATLaS checkpoints are currently deployed by a Hugging Face
   Inference Provider, so there is no key-free serverless route to them.
-
-If Hugging Face later deploys them, set `NATLAS_ASR_PROVIDER=hf-router` in the app
-and this service can be retired without touching the client code.
 
 ## Requirements
 
@@ -51,6 +48,17 @@ docker build -f asr-service/Dockerfile -t natlas-asr .
 docker run --gpus all -p 8000:8000 -e HF_TOKEN=hf_... -e NATLAS_ASR_API_KEY=... natlas-asr
 ```
 
+## Checks
+
+With the service dependencies installed, install the development tools and run
+the correctness lint and smoke tests:
+
+```bash
+pip install -r requirements-dev.txt
+ruff check app.py tests
+python -m pytest tests
+```
+
 ## API
 
 ### `GET /health`
@@ -71,7 +79,7 @@ least three `NCAIR1/` checkpoints are loaded.
 ### `POST /transcribe`
 
 `multipart/form-data` with `file` (any browser container) and `language`
-(`hausa` | `igbo` | `yoruba` | `english`, or the raw ISO codes).
+(`hausa` | `igbo` | `yoruba` | `english`, or a service key: `ha`, `ig`, `yo`, `en-ng`).
 
 ```json
 {

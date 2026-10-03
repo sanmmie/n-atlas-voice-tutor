@@ -11,16 +11,13 @@ export interface TranscribeResult {
   durationSeconds: number | null;
 }
 
-const HF_ROUTER = 'https://router.huggingface.co/hf-inference/models';
-
 /**
  * Calls the official N-ATLaS speech-recognition checkpoints.
  *
- * Two supported transports, both running NCAIR1 ASR weights:
- *  1. `service`     — `asr-service/` in this repo: a small FastAPI app that loads
+ * The supported transport is `service` — `asr-service/` in this repo: a small
+ * FastAPI app that loads
  *     NCAIR1/Hausa-ASR, NCAIR1/Igbo-ASR or NCAIR1/Yoruba-ASR on a GPU and exposes
  *     POST /transcribe. Preferred for the demo (deterministic, inspectable, no quota).
- *  2. `hf-router`   — Hugging Face serverless inference on the same NCAIR1 repos.
  *
  * The checkpoint is chosen from the learner's selected language. There is no path
  * to Whisper-from-OpenAI, AssemblyAI, Google STT or any other recogniser.
@@ -39,10 +36,14 @@ export async function transcribeWithNatlas(
 
   const startedAt = Date.now();
   try {
-    const result =
-      config.NATLAS_ASR_PROVIDER === 'hf-router'
-        ? await callHfRouter(audio, language.asrModel, options.mimeType ?? config.NATLAS_ASR_MIME, config.HF_TOKEN, controller.signal)
-        : await callAsrService(audio, language, options.mimeType ?? config.NATLAS_ASR_MIME, config.NATLAS_ASR_BASE_URL, config.NATLAS_ASR_API_KEY, controller.signal);
+    const result = await callAsrService(
+      audio,
+      language,
+      options.mimeType ?? config.NATLAS_ASR_MIME,
+      config.NATLAS_ASR_BASE_URL,
+      config.NATLAS_ASR_API_KEY,
+      controller.signal,
+    );
 
     // Defence in depth: never surface a transcript that did not come from N-ATLaS.
     if (!result.model.startsWith('NCAIR1/')) {
@@ -78,7 +79,7 @@ async function callAsrService(
 ): Promise<Omit<TranscribeResult, 'latencyMs'>> {
   const form = new FormData();
   form.append('file', new Blob([audio], { type: mimeType }), `utterance.${extensionFor(mimeType)}`);
-  form.append('language', language.iso6393);
+  form.append('language', language.asrLanguageKey);
 
   const response = await fetch(`${baseUrl.replace(/\/$/, '')}/transcribe`, {
     method: 'POST',
@@ -111,44 +112,8 @@ async function callAsrService(
   return {
     text: payload.text.trim(),
     model: payload.model,
-    language: payload.language ?? language.iso6393,
+    language: payload.language ?? language.asrLanguageKey,
     durationSeconds: payload.duration_seconds ?? null,
-  };
-}
-
-async function callHfRouter(
-  audio: ArrayBuffer,
-  model: string,
-  mimeType: string,
-  token: string | undefined,
-  signal: AbortSignal,
-): Promise<Omit<TranscribeResult, 'latencyMs'>> {
-  const response = await fetch(`${HF_ROUTER}/${model}`, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${token ?? ''}`,
-      'content-type': mimeType,
-    },
-    body: audio,
-    signal,
-    cache: 'no-store',
-  });
-
-  if (!response.ok) {
-    throw new NatlasError(
-      'asr',
-      response.status,
-      `Hugging Face could not serve ${model}.`,
-      (await response.text().catch(() => '')).slice(0, 500),
-    );
-  }
-
-  const payload = (await response.json()) as { text?: string };
-  return {
-    text: (payload.text ?? '').trim(),
-    model,
-    language: model.split('/')[1]?.split('-')[0]?.toLowerCase() ?? '',
-    durationSeconds: null,
   };
 }
 
