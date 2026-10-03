@@ -59,6 +59,12 @@ ruff check app.py tests
 python -m pytest tests
 ```
 
+Ruff is configured in `ruff.toml`, deliberately not in `pyproject.toml`. Vercel
+switches a build to `uv` as soon as it finds a `pyproject.toml` anywhere in the
+repository, and `uv lock` then fails the whole deployment unless that file carries
+a PEP 621 `[project]` table. This service is self-hosted, so tooling config must
+stay in `ruff.toml` and `asr-service/pyproject.toml` must not be reintroduced.
+
 ## API
 
 ### `GET /health`

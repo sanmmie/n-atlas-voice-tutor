@@ -139,6 +139,22 @@ vercel api /v9/projects/<PROJECT_ID> -X PATCH --input patch.json
 Deployment protection and the Git link are configured in Project Settings →
 Deployment Protection / Git, or via `vercel api /v9/projects/<PROJECT_ID>/link`.
 
+### One repository file that fails the build before Vercel starts
+
+`asr-service/pyproject.toml` existed for a single commit, holding nothing but
+`[tool.ruff]`. Vercel saw a `pyproject.toml` in the repository, switched the build
+to `uv`, and aborted the Next.js deployment — which has no Python of its own:
+
+```
+Failed to run "uv lock --python /vercel/path0/asr-service/.vercel/python/.venv/bin/python":
+error: No `project` table found in: /vercel/path0/asr-service/pyproject.toml
+```
+
+The ASR service is self-hosted (section 2) and never runs on Vercel, so the Ruff
+configuration now lives in `asr-service/ruff.toml`. Do not add a `pyproject.toml`
+for tooling: it changes how Vercel resolves Python dependencies and takes the
+whole app down with it.
+
 ---
 
 ## 4. Smoke test the deployed stack
