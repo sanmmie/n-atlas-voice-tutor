@@ -150,10 +150,26 @@ Failed to run "uv lock --python /vercel/path0/asr-service/.vercel/python/.venv/b
 error: No `project` table found in: /vercel/path0/asr-service/pyproject.toml
 ```
 
-The ASR service is self-hosted (section 2) and never runs on Vercel, so the Ruff
-configuration now lives in `asr-service/ruff.toml`. Do not add a `pyproject.toml`
-for tooling: it changes how Vercel resolves Python dependencies and takes the
-whole app down with it.
+The Ruff configuration now lives in `asr-service/ruff.toml`. Do not add a
+`pyproject.toml` for tooling: it changes how Vercel resolves Python dependencies
+and takes the whole app down with it.
+
+Clearing that exposed the next wall. The `deltaos-core/asr-service` project (root
+directory `asr-service`, FastAPI preset, Git-linked to `main`) now installs its
+dependencies and then fails on size:
+
+```
+Installing required dependencies from asr-service/requirements.txt...
+Error: Total bundle size (5157.66 MB) exceeds the maximum function size (500 MB).
+```
+
+`torch==2.5.1` is the reason: the PyPI manylinux wheel is 906 MB and pulls in the
+CUDA `nvidia-*` wheels. Switching to the CPU-only index does not rescue it — that
+wheel still unpacks past 500 MB before `transformers`, and each gated checkpoint
+is about a gigabyte to download on a cold lambda that also lacks `ffmpeg` and has
+a 10 s Hobby timeout. The project is kept for reference; the recogniser runs on
+the GPU box (section 2) or a Modal endpoint, and `NATLAS_ASR_BASE_URL` points
+there.
 
 ---
 

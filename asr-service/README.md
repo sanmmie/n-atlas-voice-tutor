@@ -21,6 +21,11 @@ outside the `NCAIR1/` organisation.
   your browser before `huggingface_hub` can download weights.
 - None of the N-ATLaS checkpoints are currently deployed by a Hugging Face
   Inference Provider, so there is no key-free serverless route to them.
+- **Vercel cannot host it.** A Vercel project rooted at this directory installs
+  `requirements.txt` to 5157 MB and fails the 500 MB function limit. Torch is the
+  bulk of it, and the CPU-only wheel alone still unpacks past the cap — before the
+  gated checkpoints (about a gigabyte each) have to be fetched on a cold lambda
+  that also has no `ffmpeg`.
 
 ## Requirements
 
