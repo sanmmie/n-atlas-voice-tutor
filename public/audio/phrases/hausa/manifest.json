@@ -1,15 +1,10 @@
 {
-  "$comment": "See README.md in this directory. Add human recordings of the exact strings the tutor speaks most often. Files are matched after lowercasing, diacritic stripping and punctuation removal, so a recording only has to match the reply exactly.",
+  "$comment": "See README.md in this directory. Add an entry only in the same commit as its recording: a manifest entry whose .mp3 is missing makes the browser request a file that 404s on every greeting. Until a native-speaker recording is committed, `phrases` stays empty and the browser SpeechSynthesis voice handles the reply.",
   "recording": {
     "samplerate": 22050,
     "format": "mp3",
     "bitrate": "64k",
     "notes": "Record in a quiet room with a close microphone. One file per line of `text`."
   },
-  "phrases": [
-    {
-      "text": "Sannu! Ku ne mai koyar da harshen Hausa. Ka fa za ka iya magana da ni?",
-      "file": "greeting-01.mp3"
-    }
-  ]
+  "phrases": []
 }

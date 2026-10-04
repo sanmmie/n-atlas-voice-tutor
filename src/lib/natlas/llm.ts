@@ -63,6 +63,13 @@ export async function completeWithNatlas(
   options: { maxTokens?: number; temperature?: number; signal?: AbortSignal } = {},
 ): Promise<CompletionResult> {
   const config = getConfig();
+  // Sampling parameters come from config unless a caller overrides them, so a
+  // documented NATLAS_LLM_MAX_TOKENS / NATLAS_LLM_TEMPERATURE can never be
+  // silently ignored by a hardcoded literal at a call site.
+  const sampling: { maxTokens: number; temperature: number } = {
+    maxTokens: options.maxTokens ?? config.NATLAS_LLM_MAX_TOKENS,
+    temperature: options.temperature ?? config.NATLAS_LLM_TEMPERATURE,
+  };
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), config.NATLAS_LLM_TIMEOUT_MS);
   if (options.signal) {
@@ -78,8 +85,8 @@ export async function completeWithNatlas(
       try {
         response =
           config.NATLAS_LLM_PROVIDER === 'hf-inference-endpoint'
-            ? await callHfInferenceEndpoint(config.NATLAS_LLM_BASE_URL, config.NATLAS_LLM_MODEL, config.NATLAS_LLM_API_KEY, messages, options, controller.signal)
-            : await callOpenAiCompatible(config.NATLAS_LLM_BASE_URL, config.NATLAS_LLM_MODEL, config.NATLAS_LLM_API_KEY, messages, options, controller.signal);
+            ? await callHfInferenceEndpoint(config.NATLAS_LLM_BASE_URL, config.NATLAS_LLM_MODEL, config.NATLAS_LLM_API_KEY, messages, sampling, controller.signal)
+            : await callOpenAiCompatible(config.NATLAS_LLM_BASE_URL, config.NATLAS_LLM_MODEL, config.NATLAS_LLM_API_KEY, messages, sampling, controller.signal);
         break;
       } catch (error) {
         const retryableStatus = error instanceof NatlasError && [429, 502, 503, 504].includes(error.status);

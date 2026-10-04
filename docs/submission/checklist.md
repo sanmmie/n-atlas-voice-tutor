@@ -4,7 +4,7 @@ Deadline: **12 October 2026, 23:59 WAT**. Track A = Academia & Research.
 
 | # | Component | Status | Where it lives | Blocked on |
 | --- | --- | --- | --- | --- |
-| 1 | Working artefact (deployed app + public repo) | Deployed; public page responds, **`/api/health` returned HTTP 503 on 2026-10-03** | [Live application](https://n-atlas-voice-tutor-deltaos-core.vercel.app), this repository | Healthy LLM and ASR endpoints |
+| 1 | Working artefact (deployed app + public repo) | Deployed and healthy: **`/api/health` returned HTTP 200 `ok: true` on 2026-10-04** with `NCAIR1/N-ATLaS` served by the Modal LLM endpoint and all four `NCAIR1/` ASR checkpoints loaded (Hausa, Igbo, Yoruba, Nigerian-accented English) | [Live application](https://n-atlas-voice-tutor-deltaos-core.vercel.app), this repository | — |
 | 2 | N-ATLaS integration evidence | **Done** | [`docs/n-atlas-integration.md`](../n-atlas-integration.md) | — |
 | 3 | Real-world validation, 50+ interactions | **Tooling done, data outstanding** | `validation/` | real learners |
 | 4 | Technical documentation | **Done** | `README.md`, [`architecture.md`](../architecture.md), [`deployment.md`](../deployment.md), [`limitations.md`](../limitations.md) | — |
@@ -14,18 +14,20 @@ Deadline: **12 October 2026, 23:59 WAT**. Track A = Academia & Research.
 
 ## Order of work
 
-The app is deployed. The next gate is a healthy inference stack; do not record a
-working end-to-end demo or recruit validation learners until `/api/health` returns
-`ok: true`.
+The inference gate is passed, so the remaining work is evidence-gathering, not
+plumbing. `/api/health` was verified at HTTP 200 `ok: true` on 2026-10-04; keep the
+endpoints warm (`min_containers=1` on both Modal apps) and re-check before you
+record anything.
 
-1. **Accept the N-ATLaS licence conditions** on all five gated NCAIR1 repos listed
-   in `.env.example`, using the account that will download the weights.
-2. **Stand up the LLM endpoint** (`llama-server`, vLLM, HF Inference Endpoint, or
-   Modal) — [`deployment.md` §1](../deployment.md#1-n-atlas-llm-endpoint).
-3. **Stand up the ASR service** on a GPU box — [`deployment.md` §2](../deployment.md#2-n-atlas-asr-service).
-4. **Restore inference health**, set `ADMIN_TOKEN` on the deployed app, and confirm
-   `GET /api/health` returns `ok: true` with at least three loaded `NCAIR1/` ASR
-   checkpoints.
+1. ~~**Accept the N-ATLaS licence conditions**~~ — done; `HF_TOKEN` is in the `natlas-hf`
+   Modal secret.
+2. ~~**Stand up the LLM endpoint**~~ — done; `scripts/modal_llm.py`, served at
+   `natlas-llm-server.modal.direct`.
+3. ~~**Stand up the ASR service**~~ — done; `scripts/modal_asr.py`, served at
+   `natlas-asr-server.modal.direct`.
+4. ~~**Restore inference health**~~ — done; `GET /api/health` returns `ok: true` with
+   four loaded `NCAIR1/` checkpoints. `ADMIN_TOKEN` is set, so `/api/export` and the
+   `/validation` page are reachable.
 5. **Record the demo video** while the deployment is warm.
 6. **Recruit learners and collect 50+ interactions.** This is the long pole —
    start recruiting the moment step 4 is stable, not after the video is done.

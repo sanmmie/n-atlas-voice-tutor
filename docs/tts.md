@@ -17,8 +17,15 @@ So the app uses a two-tier strategy.
 
 ## Tier 1 — pre-recorded phrase library (highest quality)
 
-`public/audio/phrases/<language>/manifest.json` maps exact tutor strings to
-human-recorded MP3s:
+**Currently empty.** The mechanism is built and wired, but no recordings are
+committed yet, so every reply currently falls through to Tier 2. The manifests
+ship with `phrases: []` on purpose: an entry whose `.mp3` is missing makes the
+browser request a file that 404s on every greeting. `src/lib/tts.ts` also
+probes a recording with `HEAD` before playing it and caches the miss, so a
+half-filled manifest degrades to Tier 2 instead of erroring.
+
+When recordings exist, `public/audio/phrases/<language>/manifest.json` maps
+exact tutor strings to human-recorded MP3s:
 
 ```json
 { "phrases": [ { "text": "Sannu! Ku ne mai koyar da harshen Hausa…", "file": "greeting-01.mp3" } ] }
@@ -47,8 +54,10 @@ Everything unmatched is spoken by the Web Speech API using `ha-NG`, `ig-NG` or
 - No server cost, and no learner audio leaves the device — which is the main
   privacy advantage.
 
-`hasVoiceFor()` exists so the app can tell whether a real voice for the selected
-language is present.
+There is no `hasVoiceFor()` helper: the app resolves the voice inside `speak()`
+and returns `'none'` when the device has none, which is what makes the caller
+fall back to showing the reply as text rather than letting the browser read it
+aloud in English.
 
 ## What is deliberately not here
 

@@ -3,6 +3,13 @@ import { getConfig } from '@/lib/natlas/config';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+/**
+ * Both probes hold a 15 s AbortController, so this can legitimately run for
+ * 30 s. Without an explicit `maxDuration` the function inherits the plan
+ * default (10 s on Hobby) and the go/no-go gate 504s instead of reporting
+ * `degraded`, which is the one thing this endpoint exists to prevent.
+ */
+export const maxDuration = 60;
 
 /**
  * GET /api/health

@@ -6,8 +6,11 @@ llama-server — that is the whole reason `/api/health` reports `fetch failed`. 
 gives the app a public HTTPS URL, and the weights are pulled by Modal's network
 into a Volume rather than over a local connection.
 
-Costs are kept off a metered connection and inside Modal's $30/month free credit:
-the server scales to zero, so you only pay for the minutes you actually demo.
+Cost warning: this app sets `min_containers=1` so the demo never pays a vLLM cold
+start, which means it does **not** scale to zero. An always-on L4 bills roughly
+the price of a small GPU VM every hour of every day. Delete `min_containers=1`
+and keep `scaledown_window` if you want pay-per-demo-minute behaviour instead —
+at the cost of a multi-minute cold start on the first turn of a demo.
 
 Prerequisites:
 

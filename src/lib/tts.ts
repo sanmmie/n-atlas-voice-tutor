@@ -40,6 +40,26 @@ function normalise(value: string): string {
 
 const manifestCache = new Map<LanguageCode, PhraseEntry[]>();
 
+/**
+ * Recordings that turned out not to be there. A manifest entry can outrun its
+ * .mp3, and without this the browser requests the missing file on every greeting
+ * and logs a 404 each time.
+ */
+const missingRecordings = new Set<string>();
+
+async function recordingExists(language: LanguageCode, file: string): Promise<boolean> {
+  const key = `${language}/${file}`;
+  if (missingRecordings.has(key)) return false;
+  try {
+    const response = await fetch(`/audio/phrases/${language}/${file}`, { method: 'HEAD' });
+    if (response.ok) return true;
+  } catch {
+    // treat an unreachable file as absent rather than guessing
+  }
+  missingRecordings.add(key);
+  return false;
+}
+
 async function loadManifest(language: LanguageCode): Promise<PhraseEntry[]> {
   const cached = manifestCache.get(language);
   if (cached) return cached;
@@ -66,6 +86,7 @@ async function speakWithPhrase(text: string, language: LanguageCode): Promise<bo
   const wanted = normalise(text);
   const match = entries.find((entry) => normalise(entry.text) === wanted);
   if (!match) return false;
+  if (!(await recordingExists(language, match.file))) return false;
 
   const audio = new Audio(`/audio/phrases/${language}/${match.file}`);
   currentAudio = audio;

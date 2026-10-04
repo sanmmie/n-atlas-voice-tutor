@@ -1,3 +1,4 @@
+import { getConfig } from '../natlas/config';
 import type { LanguageCode } from '../languages';
 
 /**
@@ -69,6 +70,10 @@ export interface TopicScreen {
 }
 
 export function screenTopic(text: string): TopicScreen {
+  // `TUTOR_SAFETY_ENABLED` defaults to true, so the guard is fail-safe: it only
+  // opens up when an operator deliberately turns it off.
+  if (!getConfig().TUTOR_SAFETY_ENABLED) return { blocked: false };
+
   const trimmed = text.trim();
   if (!trimmed) return { blocked: false };
 

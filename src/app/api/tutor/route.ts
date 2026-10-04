@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     const messages = trimToContext(system, learnerText ? [...history, { role: 'user', content: learnerText }] : history);
 
     // N-ATLaS LLM INVOCATION (official NCAIR1/N-ATLaS weights).
-    const completion = await completeWithNatlas(messages, { maxTokens: 260 });
+    const completion = await completeWithNatlas(messages);
 
     const outputScreen = screenTopic(completion.text);
     const reply = outputScreen.blocked ? refusalFor(language) : completion.text;

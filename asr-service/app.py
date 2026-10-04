@@ -381,6 +381,7 @@ def transcribe_batch(
     authorization: Optional[str] = Header(default=None),
 ) -> BatchResponse:
     """Transcribe several clips; used by scripts/evaluate-asr.py for accuracy runs."""
+    _require_auth(authorization)
     key = resolve_language(language)
     model = load_model(key)
     results: List[BatchItem] = []

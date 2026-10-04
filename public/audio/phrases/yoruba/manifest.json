@@ -1,14 +1,9 @@
 {
-  "$comment": "See README.md in this directory. Add human recordings of the exact strings the tutor speaks most often.",
+  "$comment": "See README.md in this directory. Add an entry only in the same commit as its recording: a manifest entry whose .mp3 is missing makes the browser request a file that 404s on every greeting. Until a native-speaker recording is committed, `phrases` stays empty and the browser SpeechSynthesis voice handles the reply.",
   "recording": {
     "samplerate": 22050,
     "format": "mp3",
     "bitrate": "64k"
   },
-  "phrases": [
-    {
-      "text": "Pẹ̀lẹ́ o! Emi ni olùtọ́rọ̀ èdè Yorùbá rẹ. Ṣé o mọ̀ láti jíròrò pẹ̀lú mi?",
-      "file": "greeting-01.mp3"
-    }
-  ]
+  "phrases": []
 }

@@ -139,7 +139,7 @@ export async function runTurn(
   const messages = trimToContext(system + stuckNote, incoming);
 
   // ---- N-ATLaS LLM INVOCATION #2 (official NCAIR1/N-ATLaS weights) ----
-  const completion = await completeWithNatlas(messages, { maxTokens: 260 });
+  const completion = await completeWithNatlas(messages);
 
   const outputScreen = screenTopic(completion.text);
   const reply = outputScreen.blocked ? refusalFor(request.language) : completion.text;
