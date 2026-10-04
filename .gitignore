@@ -28,5 +28,13 @@ __pycache__/
 .env
 .env.local
 .env.*.local
+.env*
 # ...but the template README.md and docs/deployment.md tell you to copy must be.
+# This negation has to come last: in .gitignore the final matching rule wins, so a
+# trailing `.env*` silently drops the template the setup step depends on.
 !.env.example
+
+# Regenerable tooling caches and editor config, not part of the submitted artefact.
+# `.agents/` is a vendored skill cache reinstalled with `modal skills update`.
+/.agents/
+/.vscode/

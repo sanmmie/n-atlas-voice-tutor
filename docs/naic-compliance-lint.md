@@ -1,13 +1,14 @@
 # NAIC 2026 compliance lint — N-ATLaS Voice Tutor
 
-Audit date: 2026-10-03. Target: <https://ncair.nitda.gov.ng/naic/#tracks>.
+Audit date: **2026-10-04** (revised; supersedes the 2026-10-03 audit).
+Target: <https://ncair.nitda.gov.ng/naic/#tracks>.
 Problem statement: **02 — Voice-First Access**. Track: **A — Academia & Research**.
-Deadline: **12 October 2026, 23:59 WAT** (9 days from this audit).
+Deadline: **12 October 2026, 23:59 WAT** — **8 days from this audit**.
 
-Every claim below is marked with how it was established:
+Evidence markers:
 
-- **[ran]** — executed in this repo
-- **[src]** — read from the official source (NAIC page, HF model card, HF/Modal pricing)
+- **[ran]** — executed against this repo or the live deployment for this audit
+- **[src]** — read from the official source (NAIC page, HF model card)
 - **[code]** — read from this repository
 
 ---
@@ -16,50 +17,53 @@ Every claim below is marked with how it was established:
 
 | Check | Command | Result |
 | --- | --- | --- |
-| Lint | `npm run lint` | `✔ No ESLint warnings or errors` **[ran]** |
+| Lint | `npm run lint` | No ESLint warnings or errors **[ran]** |
 | Types | `npm run typecheck` (`tsc --noEmit`) | clean, no diagnostics **[ran]** |
-| Build | `npm run build` | `✓ Compiled successfully`, 11 routes, 99 kB first load **[ran]** |
-| HF checkpoints | fetched `huggingface.co/NCAIR1` | all 5 repos exist **[src]** |
+| Build | `npm run build` | Compiled successfully, 11 routes, 98.9 kB first load **[ran]** |
+| Live health | `GET /api/health` | **503** **[ran]** |
+| Live tutor | `POST /api/tutor` with a Hausa transcript | **502** `fetch failed` **[ran]** |
+| Vercel env | `vercel env ls --project n-atlas-voice-tutor` | 5 vars present; `LOG_DRIVER`, `DATABASE_URL`, `NATLAS_LLM_API_KEY` **absent** **[ran]** |
+| Interaction data | search for `.jsonl` / `.csv` in tree | none exists **[ran]** |
 
-Build output:
+Root cause of the live failure, established by temporarily instrumenting the
+health route to report `process.env`, then removing the instrumentation:
 
 ```
-Route (app)                              Size     First Load JS
-┌ ƒ /                                    3.12 kB          99 kB
-├ ƒ /api/asr                             0 B                0 B
-├ ƒ /api/export                          0 B                0 B
-├ ƒ /api/health                          0 B                0 B
-├ ƒ /api/log                             0 B                0 B
-├ ƒ /api/turn                            0 B                0 B
-├ ƒ /api/tutor                           0 B                0 B
-├ ƒ /session                             7.23 kB         103 kB
-├ ƒ /team                                178 B          96.1 kB
-└ ƒ /validation                          178 B          96.1 kB
-+ First Load JS shared by all            87.2 kB
+rawAsr: "http://127.0.0.1:8000"
+rawLlm: "http://127.0.0.1:8080/v1"
 ```
 
-The README's "~99 kB first load" claim is accurate.
+The variables **are** deployed and present in the function's `process.env` — their
+**values** are the localhost placeholders from `.env.example`, which inside a Vercel
+function resolve to the function's own container. See N1. **[ran]**
+
+Build output is unchanged from the previous audit, so the README's "~99 kB first
+load" claim is still accurate.
 
 ---
 
 ## 1. Verdict
 
-**The code is not the problem.** Lint, types and build are all clean. The N-ATLaS
-integration is genuine, verifiable, and enforced in three places — this is better
-evidence discipline than most NAIC entries will have. Do not rewrite any of it.
+**The code is not the problem and has not become one.** Lint, types and build are
+clean, and since the 2026-10-03 audit most previously-listed defects have been fixed
+(§4, *Resolved*). The N-ATLaS integration is enforced in three independent places
+and evidenced per turn in the CSV. Do not rewrite it.
 
-**Two things block the submission, and neither is a code defect:**
+**What blocks the submission is deployment state, evidence and paperwork — none of
+it code:**
 
-1. Nothing is deployed.
-2. There are 0 of the 50 documented real user interactions PS2 requires.
+1. **The deployed artefact is live but cannot function.** This is worse than not
+   deploying: a judge who clicks the README link gets a page that loads and then
+   fails every turn.
+2. **0 of 50 documented real interactions** — PS2's only hard numeric threshold,
+   and the longest lead-time item.
+3. **Interaction logs are currently ephemeral**, so validation evidence would be
+   destroyed on the next redeploy (N3).
+4. **Endorsement letter, team profile and demo video** are unstarted.
 
-**Three defects would cost you points or embarrass you in front of the panel:**
-
-- `/validation` renders full learner transcripts to anyone with the URL.
-- `hf-router` is documented as a supported ASR transport and cannot work.
-- The docs contradict each other about whether the app is deployed.
-
-Everything else is polish.
+With 8 days left the critical path is **N3 → N1 → N2**, in that order: N3 is a
+silent data-loss trap, N1 is a prerequisite for recording anything, and N2 is the
+requirement itself.
 
 ---
 
@@ -69,213 +73,168 @@ Everything else is polish.
 
 | Requirement | Status | Evidence / gap |
 | --- | --- | --- |
-| All members Nigerian citizens or registered entities | ⚠️ | Not verifiable from code. `NATLAS_TEAM` lists 3 names/affiliations **[code]** — you must be able to prove citizenship per member. |
-| Original work, not previously awarded | ⚠️ | Cannot self-certify in code. Requires the declaration checklist in `docs/submission/team-profile-template.md` to be ticked. |
-| Each team submits to only one problem statement | ✅ | PS2 only; no second statement anywhere **[code]**. |
-| Functioning artefact integrated with N-ATLAS | ⚠️ | The build is functioning and integrated **[ran]**; it is **not deployed**. |
-| Applications and materials in English | ✅ | All docs English **[code]**. The app speaks Nigerian languages to learners — that is the product, not the submission material. |
+| All members Nigerian citizens or registered entities | ⚠️ | Not verifiable from code. `NATLAS_TEAM` lists 3 names/affiliations **[code]**; you must be able to prove citizenship per member. |
+| Original work, not previously awarded | ⚠️ | Cannot self-certify in code. |
+| One problem statement only | ✅ | PS2 only; no second statement anywhere **[code]**. |
+| **Functioning artefact integrated with N-ATLAS** | ❌ | **Regression from the last audit.** Deployed, but `/api/health` is 503 and `/api/tutor` is 502 **[ran]**. See N1. |
+| Applications and materials in English | ✅ | All docs English **[code]**. The tutor *speaks* Nigerian languages to learners — that is the product, not the submission material. |
 
-### 2.2 Problem Statement 02 (Voice-First Access)
+### 2.2 Problem Statement 02 — Voice-First Access
 
 | Requirement | Status | Evidence / gap |
 | --- | --- | --- |
-| Voice input must use the **official N-ATLAS ASR service** for the relevant language | ✅ | `src/lib/natlas/asr.ts` → `NCAIR1/Hausa-ASR`, `NCAIR1/Igbo-ASR`, `NCAIR1/Yoruba-ASR`, selected from the learner's language, never from audio it could sniff **[code]**. All three repos verified to exist **[src]**. |
-| Real-world validation: **minimum 50 documented user interactions** | ❌ | `validation/README.md` states `0 / 50`. `validation/REPORT.md` is a placeholder. Nothing is fabricated — correct, but it is 0. |
-| Use case must be one of: education, agriculture, health, civic, financial literacy | ✅ | Education / language learning **[code]**. |
-| Delivery channel | ⚠️ | PS2 lists WhatsApp voice notes, USSD, IVR, **low-bandwidth mobile applications**. This is a mobile-web app, not a native low-bandwidth app and not a messaging/USSD channel. It is closest to the fourth bullet but you are asking the panel to accept a browser as "low-bandwidth mobile application". Say so explicitly in the team profile and demo video rather than leaving it implicit — the low-bandwidth engineering is real and documented (`docs/architecture.md` § Low-bandwidth choices), so argue it, don't hide it. |
+| Voice input must use the **official N-ATLAS ASR service** for the relevant language | ✅ *(code)* / ❌ *(live)* | `asr.ts` selects `NCAIR1/{Hausa,Igbo,Yoruba}-ASR` from the learner's declared language, never inferred from the audio **[code]**. But **no ASR endpoint is deployed**, so there is no live path. See N1. |
+| **Minimum 50 documented real user interactions** | ❌ | `validation/README.md` states **0 / 50 required**; no interaction data exists in the tree **[ran]**. |
+| Use case within PS2's list | ✅ | Education / language learning **[code]**. |
+| Delivery channel | ⚠️ | PS2 lists WhatsApp voice notes, USSD, IVR and **low-bandwidth mobile applications**. This is a mobile web app. Argue it explicitly in the team profile and demo video rather than leaving it implicit — the low-bandwidth engineering is real and documented. |
 
 ### 2.3 Build requirements
 
 | Requirement | Status | Evidence / gap |
 | --- | --- | --- |
-| A working technical build | ⚠️ | Builds and runs **[ran]**; not deployed, so there is no live artefact to point at. |
-| Genuine N-ATLAS integration | ✅ | Three independent runtime guards: `config.ts` Zod refinement requires the `NCAIR1/` prefix; `asr.ts` rejects any ASR payload whose `model` is not `NCAIR1/…`; `asr-service/app.py::assert_official()` refuses to load outside `NCAIR1/` **[code]**. |
-| Real-world validation (real users / data / live benchmarks) | ❌ | None. `validation/asr-samples/` is empty of clips; no WER figures exist yet. |
-| Not sufficient — research paper without build | n/a | This is a build, not a paper. |
-| Not sufficient — slides, frameworks, mock-ups, proposals | n/a | Not the case here. |
-| Solutions not integrated with N-ATLAS are ineligible | ✅ | See above. |
+| A working technical build | ⚠️ | Builds clean **[ran]** and is deployed, but is non-functional at runtime **[ran]**. |
+| Genuine N-ATLAS integration | ✅ | Three independent runtime guards: `config.ts` Zod refinement requires the `NCAIR1/` prefix; `asr.ts` rejects any ASR payload whose `model` is not `NCAIR1/…`; `asr-service/app.py::assert_official()` refuses to load outside `NCAIR1/` **[code]**. `export-csv.mjs` additionally fails with `COMPLIANCE FAILURE` on any non-`NCAIR1/` id **[code]**. |
+| Real-world validation (real users / data / live benchmarks) | ❌ | Zero. `validation/asr-samples/` holds no clips; no WER figures exist. |
+| Not sufficient — paper, slides, framework, mock-up, proposal | ✅ | Not the case; this is a build. |
+| Solutions not integrated with N-ATLAS are ineligible | ✅ | Enforced, not merely asserted: `config.ts` Zod refinement refuses to start on any model id outside `NCAIR1/`, and `export-csv.mjs` fails the export with `COMPLIANCE FAILURE`. There is no code path to a wrapped model. **[code]** |
 
 ### 2.4 The seven submission components
 
 | # | Component | Status | Where it lives / what is missing |
 | --- | --- | --- | --- |
-| 1 | Working artefact (repo, deployed app, published model, live API) | ❌ | Repo yes; **deployment no**. |
-| 2 | N-ATLAS integration evidence | ✅ | `docs/n-atlas-integration.md` — genuinely strong: models, call sites, transport options, rejected alternatives, reviewer verification steps. |
+| 1 | Working artefact (repo, deployed app, live API) | ⚠️ | Repo and live URL both exist, but the deployment cannot serve a turn **[ran]**. Unblocks with N1. |
+| 2 | N-ATLAS integration evidence | ✅ | `docs/n-atlas-integration.md` — models, call sites, transports, rejected alternatives, reviewer verification steps. |
 | 3 | Real-world validation | ❌ | `validation/` zero rows. |
 | 4 | Technical documentation | ✅ | `README.md`, `docs/architecture.md`, `docs/deployment.md`, `docs/limitations.md`, `docs/tts.md`. |
-| 5 | Video demonstration, 3–5 min | ❌ | `docs/submission/demo-video-script.md` is written and good; not recorded (blocked on #1). |
+| 5 | Video demonstration, 3–5 min | ❌ | `docs/submission/demo-video-script.md` is written and good; unrecorded. Blocked on N1. |
 | 6 | Team profile | ❌ | `docs/submission/team-profile-template.md` — brackets unfilled. |
-| 7 | Endorsement / registration | ❌ | `docs/submission/endorsement-letter-template.md` — unsigned. |
+| 7 | Endorsement / registration | ❌ | `docs/submission/endorsement-letter-template.md` — unsigned. Institutional lead time; start today. |
 
-### 2.5 Track A (Academia & Research)
+### 2.5 Track A — Academia & Research
 
 | Requirement | Status | Evidence / gap |
 | --- | --- | --- |
-| Team size 2–5 | ✅ | 3 members in `src/lib/natlas/attribution.ts` **[code]**. |
-| At least one enrolled student or postgraduate researcher | ⚠️ | Listed as "PG student" in the README table **[code]** — needs proof of enrolment. |
-| A faculty supervisor | ✅ | Prof. Semion Olaogun listed as Academic Lead **[code]**. |
-| Institutional endorsement letter signed by Head of Department | ❌ | Template only. |
+| Team size 2–5 | ✅ | 3 members in `attribution.ts` **[code]**. |
+| At least one enrolled student / postgraduate researcher | ⚠️ | Listed as "PG student" **[code]** — needs proof of enrolment. |
+| A faculty supervisor | ✅ | Prof. Simeon Olaogun, Academic Lead **[code]**. |
+| Institutional endorsement letter signed by the Head of Department | ❌ | Template only. |
 
-> **Note on a discrepancy in the official material.** The Tracks section says both
-> tracks are 2–5 members; the FAQ says Track B is 1–6. That affects Track B only,
-> so it does not change anything for you — but do not quote the FAQ at a Track A
-> panel.
+> **Discrepancy in the official material.** The Tracks section gives both tracks as
+> 2–5 members; the FAQ gives Track B as 1–6. That affects Track B only, so it does
+> not change anything for you — but do not quote the FAQ at a Track A panel.
 
 ### 2.6 Evaluation criteria — where this submission is strong and weak
 
 | Criterion | Read |
 | --- | --- |
-| Working artefact & technical rigour | Strong code; **no deployed artefact yet**. |
+| Working artefact & technical rigour | Strong code; **artefact deployed but non-functional**, which currently reads worse than shipping no URL at all. |
 | N-ATLAS integration | **Strongest asset.** Real checkpoints, runtime enforcement, per-turn evidence in the CSV. |
-| Real-world validation | **Weakest asset.** Zero. |
-| Impact potential | Good story (people who do not type), needs the user evidence to land. |
-| Scalability & sustainability | Honest limitation docs help here; the 1000-active-user licence cap is correctly disclosed. |
-| Team capability | Linguistics department + engineering partner is a genuinely good shape; unfilled profile currently shows as blank. |
+| Real-world validation | **Weakest asset.** Zero, and currently at risk of staying zero — see N3. |
+| Impact potential | Good story (people who do not type); needs the user evidence to land. |
+| Scalability & sustainability | Honest limitation docs help here; the licence cap is correctly disclosed. |
+| Team capability | Linguistics department plus an engineering partner is a genuinely good shape; the profile currently renders blank. |
 
 ---
 
 ## 3. What the code already gets right — do not "improve" these
 
-Recording them so nobody refactors them away under deadline pressure:
+Recorded so nobody refactors them away under deadline pressure:
 
-- **Server-side chaining in `/api/turn`** so the logged checkpoint ids cannot be
-  forged by a browser. This is the single best compliance decision in the repo
-  (`src/lib/tutor/turn.ts`) **[code]**.
-- **Three model-identity guards** (config, ASR response, ASR service loader)
-  **[code]**. All five `NCAIR1` repos verified real **[src]**.
-- **Per-turn evidence in the CSV** (`asrModel`, `llmModel`, both latencies,
-  `ttsEngine`, `networkType`) and the `EvidenceStrip` on screen **[code]**.
-- **`export-csv.mjs` fails hard** with `COMPLIANCE FAILURE` if any non-`NCAIR1/`
-  model id appears in the log **[code]**. Keep that.
-- **Honest limitations** — Yorùbá 2.69/5.0 is disclosed in the UI, README and
-  `docs/limitations.md`. The model card confirms these figures **[src]**. Panels
-  reward this; do not soften it.
+- **Server-side chaining in `/api/turn`**, so the logged checkpoint ids cannot be forged by a browser (`src/lib/tutor/turn.ts`) **[code]** — the single best compliance decision in the repo.
+- **Three model-identity guards** (config, ASR response, ASR service loader) plus the CSV export's hard `COMPLIANCE FAILURE` **[code]**.
+- **Per-turn evidence in the CSV** (`asrModel`, `llmModel`, both latencies, `ttsEngine`, `networkType`) and the on-screen `EvidenceStrip` **[code]**.
+- **Per-checkpoint attribution** in `NATLAS_ASR_ATTRIBUTIONS`, quoted verbatim per model card including Yoruba's different wording **[code]**.
+- **`date_string` matches the official template** (`03 Oct 2026`), and the HF transport's deliberate omission of it is documented in `llm.ts` **[code]**.
+- **`/validation` is token-gated** behind `isValidAdminToken` **[code]**.
+- **Honest limitations** — Yorùbá 2.69/5.0 disclosed in the UI, README and `docs/limitations.md`. Panels reward this; do not soften it.
 - **Guest mode / no login** and **no audio persisted** **[code]**.
+- **`asr-service/pyproject.toml` is absent and must stay absent.** Vercel switches the entire build to `uv` when it sees one, which takes the Next.js app down (`docs/deployment.md`) **[code]**.
+
 ---
 
 ## 4. Defect register
 
-Ranked by what it costs you. "PS2 impact" is the concrete consequence.
+### Blocking — the submission is invalid until these are closed
 
-### A. Blocking — the submission is invalid until these are closed
+**N1. The deployed artefact is live but non-functional.**
+Evidence: `GET /api/health` → 503; `POST /api/tutor` with a Hausa transcript →
+`502 {"error":"N-ATLaS LLM call failed (NCAIR1/N-ATLaS via openai-compatible).","detail":"fetch failed"}` **[ran]**.
+The Vercel production env holds `NATLAS_LLM_BASE_URL=http://127.0.0.1:8080/v1` and
+`NATLAS_ASR_BASE_URL=http://127.0.0.1:8000` — the `.env.example` placeholders,
+confirmed by reading `process.env` from the live function **[ran]**. No ASR endpoint
+has been deployed at all.
+PS2 impact: NAIC requires that *every submission include a **functioning** technical
+artefact integrated with N-ATLAS*. This also blocks submission components #1 and #5,
+and makes the README's "Live deployment" line an overclaim (N5).
+Fix: point both variables at real endpoints. `scripts/modal_llm.py` now deploys the
+LLM; the ASR Modal wrapper is still to be written. Then confirm `/api/health` reports
+`ok: true` with at least three loaded `NCAIR1/` checkpoints.
 
-**A1. Nothing is deployed.**
-PS2 impact: submission component #1 ("working artefact") is unsatisfied, and #5
-(the video) is blocked on it. `docs/submission/checklist.md` itself says
-`Build ready, **not deployed**`.
-Fix: §5 below.
+**N2. 0 of 50 documented real user interactions.**
+Evidence: `validation/README.md` → "Interactions collected **0 / 50 required**"; no
+`.jsonl` or `.csv` interaction data exists anywhere in the tree **[ran]**.
+PS2 impact: submission component #3 unsatisfied, and build requirement 3. This is the
+only requirement with a hard numeric threshold and the longest lead time — recruiting
+learners takes days, not hours.
+Fix: close N3 first, then N1, then recruit. `validation/README.md` already has a sound
+collection plan.
 
-**A2. 0 of 50 documented interactions.**
-PS2 impact: component #3 unsatisfied. This is the *only* requirement with a hard
-numeric threshold, and it is the longest lead-time item — recruiting learners takes
-days, not hours. With 9 days left, start recruiting before the deployment is
-polished.
-Fix: deploy, then recruit. `validation/README.md` already has a sound plan.
+**N3. Interaction logs are ephemeral on the current deployment — this will silently destroy N2's evidence.**
+Evidence: `LOG_DRIVER` is not set in the Vercel production env **[ran]**, so
+`interactions.ts` takes the `jsonl` branch and writes to
+`process.cwd()/<LOG_DIR>/interactions.jsonl`. `docs/deployment.md` states that Vercel's
+filesystem is ephemeral and not shared between instances, so the `jsonl` driver cannot
+be trusted there **[code]**.
+PS2 impact: every interaction collected before this is fixed is lost on the next
+redeploy or scale-down. You could reach the deadline with a working app, an empty log,
+and no way to evidence 50 turns.
+Fix: set `LOG_DRIVER=postgres` and `DATABASE_URL`, run
+`psql "$DATABASE_URL" -f scripts/schema.sql` once, and confirm a row actually lands
+before recruiting anyone.
 
-**A3. `.env.example` was absent from the working tree** — *corrected after checking git*.
-Evidence: `README.md` § *3. App* and `docs/deployment.md` § *3. Next.js app* both
-instruct `cp .env.example .env.local`. The file **is** tracked in git (it appears in
-commit `37b5452`) with complete, correct content, but it was **not present in the
-working tree** when this audit began, so the documented setup step would have failed
-from this checkout.
+**N4. Submission paperwork is unstarted.**
+`endorsement-letter-template.md` still contains `[Name]`, `[Date]` and an unsigned
+block; `team-profile-template.md` has unfilled rows; the demo video is unrecorded
+**[ran]**. The HoD signature is institutional and has the longest lead time of
+anything you control.
 
-A first draft of this report claimed the file did not exist in the repository. That
-was wrong: it exists in git; it was missing from the working copy. Corrected here,
-and the file has been restored and extended (§6).
+### Correctness / disclosure
 
-Secondary point, downgraded to hygiene: `.gitignore` opened with `.env`, `.env.local`
-and `.env*.local` *and* ended with a catch-all `.env*`. A catch-all would drop the
-template from version control the moment it was removed from the index and re-added.
-It is **not** a live bug while the file stays tracked, because `.gitignore` does not
-apply to tracked files.
+**N5. README claims "Live deployment" without qualification while inference is down.**
+Evidence: `README.md` → `**Live deployment:** <https://n-atlas-voice-tutor-deltaos-core.vercel.app>`,
+while the same URL serves a 503 health check **[ran]**. `docs/submission/checklist.md`
+row 1 is honest about the 503.
+Fix: either bring the stack up (N1) or qualify the claim until it is up. Do not leave
+a bare URL that a judge clicks straight into a broken app.
 
-**A4. `/validation` publishes learner transcripts without authentication.**
-Evidence: `src/app/validation/page.tsx` calls `readMergedInteractions()`
-unconditionally and renders the summary; the page has no token check **[code]**.
-The CSV *download* buttons are behind `?token=`, but the page itself and the
-underlying data are not.
-PS2 impact: the docs promise "learner identifiers are anonymous, but the words a
-person says are not" and that `/api/export` is token-protected because rows contain
-full transcripts (`docs/architecture.md` § *Data and privacy*). The page contradicts
-that promise. If a judge opens `/validation` on the live URL and the transcript
-table renders, you have a privacy claim you cannot back. **In the current state the
-page only shows aggregate counts, not raw transcripts** — but it does expose
-interaction counts, session counts, language distribution and weekly active
-learners publicly, and it is one edit away from leaking the text.
-Fix: gate the page body behind the same `ADMIN_TOKEN`, or reduce it to the
-aggregate counters and move the detail behind `/api/export`.
+### Open, low cost
 
-**A5. `hf-router` is documented as a working ASR transport and cannot work.**
-Evidence: `src/lib/natlas/asr.ts` implements `callHfRouter()` against
-`https://router.huggingface.co/hf-inference/models/NCAIR1/…`, and
-`docs/n-atlas-integration.md` § 2.2 lists it as transport option 2 **[code]**.
-Verified against the Hub: both `NCAIR1/N-ATLaS` and `NCAIR1/Hausa-ASR` are
-**gated** *and* display **"This model isn't deployed by any Inference Provider."**
-**[src]** There is therefore no serverless route for these weights.
-PS2 impact: an evaluator who reads `docs/n-atlas-integration.md` and tries the
-documented `NATLAS_ASR_PROVIDER=hf-router` path gets a failure, on a document whose
-entire purpose is proving the integration works. That is the worst possible place
-for an inaccuracy.
-Fix: either delete the `hf-router` branch and the doc bullet, or relabel it
-explicitly as "requires you to first deploy these repos to your own Inference
-Endpoint — not available serverless."
-
-### B. Correctness / compliance — fix before submitting
-
-**B6. Per-model attribution is missing.**
-Evidence: the Hub model cards require *different* attribution strings per model.
-`NATLAS_TEAM_ATTRIBUTION`/`NATLAS_ATTRIBUTION` in `src/lib/natlas/attribution.ts`
-carries only the LLM wording **[code]**. The ASR cards state their own required
-string, e.g. Hausa-ASR: *"Hausa-ASR is powered by Awarri Technologies in an
-initiative of the Federal Ministry of Communications, Innovation and Digital
-Economy"* **[src]**.
-PS2 impact: the licence for the ASR checkpoints is conditioned on attribution.
-You ship three ASR checkpoints. Add their lines to the footer and to
-`docs/n-atlas-integration.md`.
-
-**B7. `date_string` is formatted differently from the official template.**
-Evidence: `src/lib/natlas/llm.ts` sends `chat_template_kwargs: { date_string:
-todayStamp() }` where `todayStamp()` returns `toISOString().slice(0,10)` →
-`2026-10-03` **[code]**. The model card's own usage calls
-`apply_chat_template(..., date_string=current_date)` with
-`datetime.now().strftime('%d %b %Y')` → `03 Oct 2026` **[src]**.
-PS2 impact: the date is injected verbatim into the rendered Llama-3 system prompt
-("Today Date: …"). A malformed date is a small but self-inflicted prompt defect,
-and it is trivially fixable.
-
-**B8. `callHfInferenceEndpoint` does not pass `date_string` at all.**
-Evidence: `src/lib/natlas/llm.ts` — the openai-compatible branch sends
-`chat_template_kwargs`, the HF branch does not **[code]**. That is defensible for
-TGI (which ignores unknown kwargs) but means the two transports produce *different
-prompts*. For a submission whose selling point is evidence discipline, that is an
-unforced inconsistency. Document it or drop the HF branch.
-
-**B9. The README claims a live deployment that `checklist.md` says does not exist.**
-Evidence: `README.md` opens with
-`**Live deployment:** https://n-atlas-voice-tutor-deltaos-core.vercel.app`;
-`docs/submission/checklist.md` row 1 says `Build ready, **not deployed**`
-**[code]**.
-PS2 impact: if the URL is dead, a judge clicking it from the README concludes the
-artefact does not exist. Verify the URL, and if it is not live, remove the claim
-until it is.
-
-**B10. No bootstrapping: a fresh clone cannot start without hand-written env.**
-Related to A3. `getConfig()` throws a multi-line error naming the exact invalid
-fields, which is good, but there is no documented default that lets `npm run dev`
-come up far enough to see the error in the UI.
-
-### C. Polish — safe to leave, cheap to fix
 | Item | Detail | Fix cost |
 | --- | --- | --- |
-| C11 | `LanguageDefinition.iso6393` holds ISO **639-1** codes (`'ha'`, `'ig'`, `'yo'`), not 639-3 (`hau`, `igb`, `yor`). Works only because `asr-service/app.py::MODEL_BY_LANGUAGE` is keyed on the same 2-letter values **[code]**. | Rename the field to `asrLanguageKey`, or genuinely use 639-3 and update the service. |
-| C12 | `pendingTranscript` in `src/components/VoiceTutor.tsx` is only ever set to `''`, so the "Transcribing" state in `TranscriptPanel` is unreachable dead UI **[code]**. | Either populate it from an intermediate event or delete the branch. |
-| C13 | Dead/unused exports: `markAuthenticated` (`src/lib/session.ts`), `readInteractionFiles` (`src/lib/store/interactions.ts`), `refusalEnglishFor` and `languageName` (`src/lib/tutor/safety.ts`), `PostgresDriver.rows` and `PostgresDriver.sql()` (`src/lib/store/interactions.ts`). **[code]** | Delete. |
-| C14 | `'christianity'` appears twice in `SENSITIVE_TERMS` (`src/lib/tutor/safety.ts`) **[code]**. | Delete one. |
-| C15 | `REFUSALS_EN` (`src/lib/tutor/safety.ts`) is not English — the `igbo` and `yoruba` entries are copies of the Igbo/Yorùbá refusals **[code]**. The Hausa entry is the only English one. It is unused, which hides the bug. | Delete it, or actually write the English lines. |
-| C16 | `PostgresDriver` opens and closes a new connection per write and per read **[code]**. Fine at validation scale (50–500 rows); would be pathological at 1000 users. | Note it as a known scale limit; it is already covered by the sustainability criterion. |
-| C17 | `TranscriptPanel` sets `lang={languageName}` → `lang="Hausa"` instead of a BCP-47 tag like `ha-NG` **[code]**. Screen readers ignore an invalid `lang`. | Use `LANGUAGES[code].bcp47`. |
-| C18 | `next.config.mjs` uses `experimental.serverComponentsExternalPackages`, which Next 14.2 warns is moving to top-level `serverExternalPackages` **[code]**. Build is clean today. | Optional; migrate before a Next major upgrade. |
-| C19 | `asr-service/app.py` and `asr-service/requirements.txt` are not covered by `npm run lint` or `tsc` **[ran]** — **there is no Python linter or test in the repo at all**. The ASR service is the only component with zero automated verification. | Add `ruff` + a smoke test for `resolve_language`, `assert_official` and `split_wav`. |
+| C18 | `next.config.mjs` uses `experimental.serverComponentsExternalPackages`; Next 14.2 warns it is moving to top-level `serverExternalPackages` **[code]**. Build is clean today. | One line; do it before a Next major. |
+| C16 | `PostgresDriver` opens and closes a connection per read and per write **[code]**. Fine at validation scale (50–500 rows); pathological at 1000 users. | Keep as a disclosed scale limit. |
+| — | PS2 channel fit (mobile web vs "low-bandwidth mobile applications") is a judgement call, not a defect. | Argue it in the team profile and video. |
+
+### Resolved since the 2026-10-03 audit — verified today, do not re-audit
+
+| Old id | Finding | Resolution |
+| --- | --- | --- |
+| A4 | `/validation` published transcripts without authentication | Gated by `isValidAdminToken` (`validation/page.tsx:22`) **[code]** |
+| A5 | `hf-router` documented as a working ASR transport | Removed from `asr.ts` and `docs/n-atlas-integration.md` **[code]** |
+| B6 | Per-checkpoint ASR attribution missing | `NATLAS_ASR_ATTRIBUTIONS` carries all three verbatim strings **[code]** |
+| B7 | `date_string` formatted `2026-10-03` | `todayStamp()` now returns `03 Oct 2026` **[code]** |
+| B8 | HF transport omitted `date_string` | Deliberate, and now documented in `llm.ts` with a written rationale **[code]** |
+| B9 | README vs checklist deployment contradiction | Checklist corrected to state the deployed status and the 503 **[code]** |
+| C11 | `iso6393` held ISO 639-1 codes | Renamed `asrLanguageKey` **[code]** |
+| C12 | `pendingTranscript` unreachable "Transcribing" UI | Removed **[code]** |
+| C13 | Dead exports | `markAuthenticated`, `readInteractionFiles`, `refusalEnglishFor` removed **[code]** |
+| C14 | `'christianity'` duplicated in `SENSITIVE_TERMS` | Single entry **[code]** |
+| C15 | `REFUSALS_EN` held non-English strings | Removed **[code]** |
+| C17 | `TranscriptPanel` used `lang="Hausa"` | Invalid `lang` removed; `tts.ts` uses correct `ha-NG`/`ig-NG`/`yo-NG` **[code]** |
+| C19 | No Python linter or test in the repo | `asr-service/ruff.toml` and `asr-service/tests/test_app.py` exist **[code]** |
+| — | Supervisor's name spelled three ways across the repo | Standardised on **Simeon** in `attribution.ts` and `README.md` **[ran]** |
+| — | Stray `deltaos-core/asr-service` Vercel project | Deleted; it had never built (5157 MB bundle) and served nothing **[ran]** |
+
 ---
 
 ## 5. Setting up the inference layer: Hugging Face vs Modal
@@ -342,7 +301,7 @@ recording, Modal is misbehaving and you want to stop debugging.
 
 ```bash
 pip install -U "huggingface_hub[cli]" modal
-huggingface-cli login          # a token with read access
+hf login          # a token with read access
 python3 -m modal setup         # browser auth
 ```
 
@@ -358,12 +317,18 @@ HF account, or every download will 401:
 Confirm the token can actually read the gated weights:
 
 ```bash
-huggingface-cli download NCAIR1/N-ATLaS config.json --local-dir /tmp/natlas-check
+hf download NCAIR1/N-ATLaS config.json --local-dir /tmp/natlas-check
 ```
 
 If that fails, nothing downstream will work. Do not proceed past this line.
 
 ### 5.4 Option 1 (recommended) — everything on Modal
+
+> **Status update (2026-10-04).** The LLM half of this section now exists as a real,
+> validated file: **`scripts/modal_llm.py`** — the official `NCAIR1/N-ATLaS` on vLLM
+> behind an OpenAI-compatible endpoint, with an API key so the endpoint cannot be
+> used to spend the free credit. **Deploy that file.** The ASR half is still unwritten.
+> The listing below is the design it grew from and is kept for reference.
 
 Two Modal apps in one file, so there is one deploy command.
 
@@ -536,7 +501,7 @@ Use this to prove the pipeline end to end before moving to Modal.
 
 ```bash
 # LLM — ~4.9 GB RAM, CPU-viable
-huggingface-cli download tosinamuda/N-ATLaS-GGUF N-ATLaS-GGUF-Q4_K_M.gguf --local-dir models/
+hf download tosinamuda/N-ATLaS-GGUF N-ATLaS-GGUF-Q4_K_M.gguf --local-dir models/
 ./llama-server -m models/N-ATLaS-GGUF-Q4_K_M.gguf \
   --host 0.0.0.0 --port 8080 --ctx-size 8092 --alias NCAIR1/N-ATLaS
 
@@ -637,24 +602,35 @@ non-compliant — do not proceed.
 
 ### 5.9 Critical path from here
 
-Ordered strictly; each step unblocks the next. Nine days.
+Ordered strictly; each step unblocks the next. **Eight days** (deadline 12 Oct,
+23:59 WAT).
 
-1. **Today.** Accept the five HF licences. Create the Modal account and the
-   `huggingface-token` secret. (§5.3)
-2. **Today.** Deploy both Modal apps. Get `/api/health` to `ok: true`. (§5.4)
-3. **Today.** Set `LOG_DRIVER=postgres`; apply `scripts/schema.sql`. (G7)
-4. **Day 1.** Deploy the Next.js app. Re-check `/api/health` on the public URL.
-5. **Day 1–2.** Close A4, A5, B6, B7, B9 — all small edits. (A3, the missing
-   `.env.example`, was fixed during this audit.)
-6. **Day 2.** Record the demo video with endpoints warm.
-7. **Day 2–8.** Recruit 15–20 learners and collect the 50+ interactions. Runs in
-   parallel with everything else and is the only item that cannot be compressed.
-8. **Day 8.** Fill the team profile; get the HOD letter signed.
-9. **Day 9.** `npm run export:csv`, `npm run validation:report`,
+Step 5 of the previous plan (close A4, A5, B6, B7, B9) is **done** — see §4,
+*Resolved*. The Next.js app is already deployed, which moves the real work forward
+without reducing it, because the deployed app cannot currently serve a turn.
+
+1. **Before anything else, stop the data loss.** Set `LOG_DRIVER=postgres` and
+   `DATABASE_URL`, run `psql "$DATABASE_URL" -f scripts/schema.sql`, and confirm a
+   row actually lands. The current `jsonl`-on-Vercel setup discards every
+   interaction on the next deploy. (N3, G7)
+2. **Then fix inference.** Accept the five HF licences, create the `natlas-hf`
+   Modal secret, deploy `scripts/modal_llm.py`, then write the ASR wrapper. Point
+   both Vercel variables at the resulting URLs. (§5.3, §5.4, N1)
+3. **Then verify from outside.** `GET /api/health` must report `ok: true` with at
+   least three loaded `NCAIR1/` checkpoints. Until it does, record nothing.
+4. **Then recruit — today, in parallel.** Steps 1–3 are code; recruitment is people,
+   and it is the only item that cannot be compressed. Start asking learners now
+   and let the stack come up underneath them. (N2)
+5. **Day 1–2.** Record the demo video with the endpoints warm. (component #5)
+6. **Day 1–8.** Collect the 50+ documented interactions: 15–20 learners, 3–5
+   sessions each, 3–8 turns per session.
+7. **Day 8.** Fill the team profile; get the HOD letter signed. (N4)
+8. **Day 8.** `npm run export:csv`, `npm run validation:report`,
    `python scripts/evaluate-asr.py`. Confirm `export:csv` prints no
    `COMPLIANCE FAILURE`. Submit.
 
-The single highest-risk item is step 7. Everything else is about a day of work.
+The highest-risk item is recruitment (step 4), then the log driver (step 1) —
+because an unfixed log driver makes every hour of validation work unrecoverable.
 
 ---
 

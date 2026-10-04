@@ -154,9 +154,11 @@ The Ruff configuration now lives in `asr-service/ruff.toml`. Do not add a
 `pyproject.toml` for tooling: it changes how Vercel resolves Python dependencies
 and takes the whole app down with it.
 
-Clearing that exposed the next wall. The `deltaos-core/asr-service` project (root
-directory `asr-service`, FastAPI preset, Git-linked to `main`) now installs its
-dependencies and then fails on size:
+### Do not host the ASR service on Vercel
+
+A `deltaos-core/asr-service` project (root directory `asr-service`, FastAPI
+preset, Git-linked to `main`) was tried for this. It installed its dependencies
+and then failed on size:
 
 ```
 Installing required dependencies from asr-service/requirements.txt...
@@ -167,9 +169,13 @@ Error: Total bundle size (5157.66 MB) exceeds the maximum function size (500 MB)
 CUDA `nvidia-*` wheels. Switching to the CPU-only index does not rescue it — that
 wheel still unpacks past 500 MB before `transformers`, and each gated checkpoint
 is about a gigabyte to download on a cold lambda that also lacks `ffmpeg` and has
-a 10 s Hobby timeout. The project is kept for reference; the recogniser runs on
-the GPU box (section 2) or a Modal endpoint, and `NATLAS_ASR_BASE_URL` points
-there.
+a 10 s Hobby timeout. Nothing ever deployed from it, and the project has been
+deleted rather than left sitting in the account.
+
+The recogniser runs on the GPU box (section 2) or a Modal endpoint, and
+`NATLAS_ASR_BASE_URL` points there. Do not recreate the Vercel project: a lambda
+cannot hold the weights, and the only thing it would achieve is another 5 GB
+failed build per push.
 
 ---
 

@@ -48,7 +48,7 @@ export type TeamMember = {
 
 export const NATLAS_TEAM: TeamMember[] = [
   {
-    name: 'Prof. Simeion Olaogun',
+    name: 'Prof. Simeon Olaogun',
     role: 'Academic Lead',
     affiliation: 'Department of Linguistics and Languages, AAUA',
   },

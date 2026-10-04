@@ -20,7 +20,7 @@ N-ATLaS Voice Tutor is developed by **DeltaOS Core** in collaboration with the
 
 | Name | Role | Affiliation |
 | --- | --- | --- |
-| Prof. Semion Olaogun | Academic Lead | Department of Linguistics and Languages, AAUA |
+| Prof. Simeon Olaogun | Academic Lead | Department of Linguistics and Languages, AAUA |
 | Oluwasanmi T. Adebowale | Technical Partner | DeltaOS Core |
 | Aladejana Aduragbemi Samuel | PG student | Department of Linguistics and Languages, AAUA |
 
