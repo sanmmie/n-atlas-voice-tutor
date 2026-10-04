@@ -110,6 +110,10 @@ and `chunk_offsets` report where that happened.
 
 ### `POST /transcribe/batch`
 
+> Several clips in one request, as an alternative to looping `/transcribe`.
+> `scripts/evaluate-asr.py` does **not** use it — it posts each clip to
+> `/transcribe` separately, so it can report progress per clip.
+
 Same fields, several files at once. Used by `scripts/evaluate-asr.py`.
 
 ## Licensing reminder

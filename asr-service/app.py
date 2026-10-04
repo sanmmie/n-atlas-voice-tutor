@@ -23,7 +23,9 @@ Endpoints
 ---------
     GET  /health                 -> which NCAIR1 checkpoints are loaded
     POST /transcribe             -> multipart: file=<audio>, language=ha|ig|yo|en-NG
-    POST /transcribe/batch       -> several clips at once (used for accuracy evaluation)
+    POST /transcribe/batch       -> several clips in one request, as an alternative to
+                                    looping /transcribe. Note that scripts/evaluate-asr.py
+                                    posts clips to /transcribe one at a time.
 
 Only official NCAIR1 checkpoints are ever loaded. There is no fallback to
 `openai/whisper-*`, Deepgram, AssemblyAI, Google STT or any other recogniser: the
