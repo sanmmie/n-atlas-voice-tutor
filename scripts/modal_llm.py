@@ -6,11 +6,18 @@ llama-server — that is the whole reason `/api/health` reports `fetch failed`. 
 gives the app a public HTTPS URL, and the weights are pulled by Modal's network
 into a Volume rather than over a local connection.
 
-Cost warning: this app sets `min_containers=1` so the demo never pays a vLLM cold
-start, which means it does **not** scale to zero. An always-on L4 bills roughly
-the price of a small GPU VM every hour of every day. Delete `min_containers=1`
-and keep `scaledown_window` if you want pay-per-demo-minute behaviour instead —
-at the cost of a multi-minute cold start on the first turn of a demo.
+Cost: this app scales to zero after 30 idle minutes, so an endpoint nobody is
+demonstrating to costs nothing. The price of that is a vLLM cold start on the
+first turn after an idle stretch, which takes minutes and will not fit inside the
+60 s the Next.js route allows. So warm it on purpose, immediately before you need
+it — this entrypoint boots the server, waits for /health, and then checks that a
+Hausa prompt comes back in Hausa:
+
+    python -m modal run scripts/modal_llm.py
+
+Run it a few minutes before recording the demo video or before a validation
+session, not after. Set `min_containers=1` back for demo day only, if a cold start
+in the middle of a judged run is a risk you would rather pay for.
 
 Prerequisites:
 
@@ -79,8 +86,13 @@ app = modal.App("natlas-llm")
         "/root/.cache/vllm": vllm_cache_vol,
     },
     port=VLLM_PORT,
-    scaledown_window=300,
-    min_containers=1,
+    # Scale to zero so an idle endpoint costs nothing. The window is 30 minutes,
+    # not the 5 it was set to: this app is called once per conversational turn, so
+    # a short window means a pause mid-lesson pays a multi-minute vLLM cold start
+    # against a Next.js route capped at 60 s. Warm it deliberately instead —
+    # `python -m modal run scripts/modal_llm.py` boots it and verifies a Hausa
+    # prompt answers in Hausa.
+    scaledown_window=30 * 60,
     startup_timeout=600,
     target_concurrency=8,
     unauthenticated=True,

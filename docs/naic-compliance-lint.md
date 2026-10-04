@@ -340,7 +340,9 @@ moved on.** What actually runs in production is two files, not one:
 | `scripts/modal_llm.py` | `NCAIR1/N-ATLaS` over an OpenAI-compatible API | `L4:1` | `vllm==0.21.0`, CUDA 12.9 |
 | `scripts/modal_asr.py` | this repo's own FastAPI app on port 8000 | `L4:1` | `scaledown_window=300`, `startup_timeout=600` |
 
-Both set **`min_containers=1`**, so neither scales to zero — see §5.7. Both read
+Both scale to zero after 30 idle minutes (`scaledown_window=30 * MINUTES`, no
+`min_containers`), so an unused endpoint is free — see §5.7 for what that costs
+instead. Both read
 the **`natlas-hf`** Modal secret, which must contain `HF_TOKEN`,
 `NATLAS_LLM_API_KEY` *and* `NATLAS_ASR_API_KEY`. The ASR bearer token is compared
 by `asr-service/app.py::_require_auth`. Until 2026-10-04 `/health` needed no token,
@@ -542,31 +544,48 @@ Note `--alias NCAIR1/N-ATLaS` — llama.cpp must advertise the official id, beca
 
 ### 5.7 Cost comparison
 
-**Corrected 2026-10-04.** The earlier version of this table priced Modal as
-scale-to-zero. Both deployed apps set `min_containers=1`
-(`scripts/modal_llm.py:80`, `scripts/modal_asr.py:79`) precisely so a demo never pays
-a cold start — which means **they bill continuously**. The "$0 when idle" line
-below was wrong, and with it the recommendation that followed from it.
+**Corrected twice on 2026-10-04.** The first version of this table priced Modal as
+scale-to-zero, which was wrong: both deployed apps set `min_containers=1` so a demo
+would never pay a cold start, and therefore billed continuously. The second version
+corrected that, which was also wrong in practice: ~$38/day for two always-on L4s
+against a $30/month credit is not a plan anyone will actually keep. **As of
+2026-10-04 both apps scale to zero** — `min_containers` removed,
+`scaledown_window=30 * MINUTES` in both `scripts/modal_llm.py` and
+`scripts/modal_asr.py`. An endpoint nobody is demonstrating to now costs nothing.
 
 L4 on Modal is roughly $0.80/hr (confirm on modal.com/pricing before spending).
-Two always-on L4 endpoints is therefore roughly $1.60/hr, about $38/day and about
-$1,150 for a month — against a $30/month free credit. That is the single largest
-unbudgeted line in this project.
+Only time a container is actually up is billed, so the number that matters is hours
+of use plus the 30-minute idle window each endpoint sits through after its last
+request.
 
-| | Modal, two always-on L4s (`min_containers=1`) | HF Inference Endpoint (L4, always on) |
-| --- | --- | --- |
-| Rate | ≈ $0.80/hr each, ≈ $1.60/hr together | ≈ $0.80/hr, billed continuously |
-| 6 h of use | ≈ **$9.60** for the pair | ≈ $4.80 for the LLM endpoint alone |
-| 7 days, left running | ≈ **$269** for the pair | ≈ $134 for the LLM alone |
-| 30 days, left running | ≈ **$1,152** for the pair | ≈ $576 for the LLM alone |
-| Free tier | $30/month; up to $10k academic | none |
-| Cold start | avoided by `min_containers=1` | none |
+| | Modal, two L4s, scale to zero (current) | Modal, two always-on L4s (rejected) | HF Inference Endpoint (L4, always on) |
+| --- | --- | --- | --- |
+| Rate | ≈ $0.80/hr each, only while up | ≈ $1.60/hr together | ≈ $0.80/hr, billed continuously |
+| Idle | **$0** | ≈ $38/day | ≈ $19/day |
+| 6 h of actual use | ≈ **$9.60** for the pair | ≈ $9.60 | ≈ $4.80 for the LLM alone |
+| 7 days, one 1 h demo a day | ≈ **$6–8** for the pair | ≈ $269 | ≈ $134 for the LLM alone |
+| 7 days, left running | ≈ **$0** | ≈ $269 | ≈ $134 |
+| 30 days, one 1 h demo a day | ≈ **$48–72** for the pair | ≈ $1,152 | ≈ $576 for the LLM alone |
+| Free tier | $30/month; up to $10k academic | $30/month | none |
+| Cold start | minutes, on the first turn after 30 idle minutes | avoided by `min_containers=1` | none |
 
-**Decision needed before 12 Oct.** Either accept ~$38/day for a demo-ready stack,
-or drop `min_containers=1` and accept a multi-minute vLLM cold start on the first
-turn of the demo video, or collapse to one always-on endpoint and self-host the
-LLM, keeping only the ASR warm. What must not happen is leaving both running
-unnoticed on the assumption that they are free.
+**What scale-to-zero costs instead.** A vLLM cold start takes minutes, and
+`app/api/turn/route.ts` caps `maxDuration = 60`, so the first turn after an idle
+stretch fails outright rather than being merely slow. Three things follow, all
+required rather than optional:
+
+1. Warm both endpoints deliberately before recording, demoing or recruiting —
+   `python -m modal run scripts/modal_llm.py` and `scripts/modal_asr.py`. Each boots
+   the server, waits out `/health`, and then exercises the model, so they double as
+   post-deploy verification.
+2. Warm minutes ahead, not seconds. `scripts/modal_asr.py` preloads the three
+   checkpoints at boot for exactly this reason.
+3. Set `min_containers=1` back on both apps for demo day only, if a cold start
+   landing in the middle of a judged run is worse than $38. It is one day of spend
+   against a $30 monthly credit.
+
+The credit covers several demo days comfortably. What must not happen is two
+always-on endpoints running unnoticed on the assumption that they are free.
 ---
 
 ### 5.8 Gotchas that will actually cost you hours
@@ -713,5 +732,7 @@ token in the `natlas-hf` Modal secret — every `/transcribe` returns 401 while
 `/api/health` alone will never reveal it, so probe `/transcribe` with the token
 before recording anything. Then record the video, recruit learners, export the
 evidence (`npm run export:csv` now pulls from the deployment), fill the team profile
-and obtain the signed Head of Department letter. Also decide the compute bill:
-both Modal apps pin `min_containers=1`, so they are never free while idle.
+and obtain the signed Head of Department letter. Also decide the compute
+bill: both Modal apps now scale to zero after 30 idle minutes, so they are free
+while unused and paid only for actual use — which makes warming them before a
+recording or demo a task, not an optimisation.

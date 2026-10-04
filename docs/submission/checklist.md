@@ -16,7 +16,8 @@ Deadline: **12 October 2026, 23:59 WAT**. Track A = Academia & Research.
 
 The inference gate is passed, so the remaining work is evidence-gathering, not
 plumbing. `/api/health` was verified at HTTP 200 `ok: true` on 2026-10-04; keep the
-endpoints warm (`min_containers=1` on both Modal apps) and re-check before you
+endpoints warm (`python -m modal run scripts/modal_llm.py` and `scripts/modal_asr.py`;
+both scale to zero after 30 idle minutes) and re-check before you
 record anything.
 
 1. ~~**Accept the N-ATLaS licence conditions**~~ — done; `HF_TOKEN` is in the `natlas-hf`

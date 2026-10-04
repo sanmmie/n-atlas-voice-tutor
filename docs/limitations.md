@@ -15,7 +15,7 @@ project and recorded in `validation/`.
 | **Reduced accuracy on children's speech** | N-ATLaS terms of use | The tutor is not currently usable as a primary tool for young children. |
 | **Limited code-switching** | N-ATLaS terms of use | Nigerian learners mix languages constantly. Mid-sentence code-switching will be transcribed badly. |
 | **Degraded in noisy environments** | N-ATLaS terms of use | Market and street testing will be visibly worse than quiet-room testing. |
-| **No hosted inference provider** | Hugging Face model page | The demo needs a self-hosted GPU or a Hugging Face Inference Endpoint. Production uses two Modal L4 endpoints that stay provisioned (`min_containers=1`), which is a real ongoing cost — see `docs/naic-compliance-lint.md` §5.7. |
+| **No hosted inference provider** | Hugging Face model page | The demo needs a self-hosted GPU or a Hugging Face Inference Endpoint. Production uses two Modal L4 endpoints that scale to zero after 30 idle minutes, so they cost nothing when unused — but the first turn after an idle stretch pays a multi-minute cold start, which is why both must be warmed deliberately before a demo. See `docs/naic-compliance-lint.md` §5.7. |
 | **1000 active end-user cap**, research licence | N-ATLaS terms of use | Fine for a NAIC pilot; commercial scale would need separate licensing. |
 | **Gated repository** | Hugging Face | Requires an HF account that accepted the licence conditions. |
 

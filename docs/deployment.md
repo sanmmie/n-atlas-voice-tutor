@@ -226,9 +226,19 @@ A `200` there, not a green `/api/health`, is what means a voice turn will work.
 
 ## 5. Operational notes
 
-- **Cold starts dominate first-run latency.** Preload the ASR checkpoints
-  (`PRELOAD_LANGUAGES`) and keep one LLM instance warm, or the first learner of the
-  day waits 30+ seconds.
+- **Cold starts dominate first-run latency.** Both Modal apps scale to zero after 30
+  idle minutes, so the first turn of a session pays a multi-minute model load that
+  the 60 s route cannot wait for. Warm both endpoints a few minutes before you
+  record, demo or recruit:
+
+  ```bash
+  python -m modal run scripts/modal_llm.py   # boots vLLM, checks a Hausa prompt answers in Hausa
+  python -m modal run scripts/modal_asr.py   # boots the ASR service, checks the checkpoints load
+  ```
+
+  The same commands are the post-deploy verification: each waits for `/health` and
+  then exercises the model. Set `min_containers=1` on both if a cold start during a
+  judged run is worse than the ~$38/day it costs.
 - **Set `maxDuration`** high enough for a cold LLM (60 s in the route exports). On
   Vercel Hobby this exceeds the platform limit — use a warm endpoint.
 - **Do not log audio.** The app sends audio to the ASR service and discards it; the

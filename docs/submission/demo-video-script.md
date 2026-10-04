@@ -24,7 +24,10 @@ except for the health shot below — it makes the proof trivial.
 
 - [ ] `/api/health` reports `ok: true` **before** recording — a degraded run will
       show up in the video and cost credibility.
-- [ ] Both endpoints warmed. A cold first request looks like a 30-second freeze.
+- [ ] Both endpoints warmed **minutes** before recording — `python -m modal run
+      scripts/modal_llm.py` and `scripts/modal_asr.py`. Both scale to zero after 30
+      idle minutes, and the cold start is minutes long, not seconds: an unwarmed
+      first turn will blow past the 60 s route limit and fail on camera.
 - [ ] Microphone permission already granted, no permission prompt in shot 4.
 - [ ] Yorùbá mistakes kept in (shot 6). A flawless Yorùbá demo invites the
       question "was that a scripted turn?".

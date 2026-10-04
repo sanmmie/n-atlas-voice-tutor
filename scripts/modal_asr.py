@@ -75,8 +75,12 @@ app = modal.App(APP_NAME)
     ],
     volumes={"/root/.cache/huggingface": hf_cache_vol},
     port=ASR_PORT,
-    scaledown_window=300,
-    min_containers=1,
+    # Scale to zero so an idle endpoint costs nothing. 30 minutes rather than 5,
+    # for the same reason as the LLM app: this is called once per voice turn, and a
+    # short window turns a pause in the lesson into a cold start that the 60 s
+    # route cannot wait for. Warm it with `python -m modal run scripts/modal_asr.py`
+    # before recording or demoing.
+    scaledown_window=30 * 60,
     startup_timeout=600,
     target_concurrency=4,
     unauthenticated=True,
