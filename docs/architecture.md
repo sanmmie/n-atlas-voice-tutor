@@ -36,6 +36,9 @@
 │  N-ATLaS LLM server                                       │
 │    llama.cpp llama-server / vLLM / TGI / Modal           │
 │    weights: NCAIR1/N-ATLaS                                │
+│                                                          │
+│  Production today: both run on Modal (scripts/modal_llm.py│
+│  and scripts/modal_asr.py), each on an L4.                │
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -57,7 +60,7 @@ round-trip on a metered connection.
 | --- | --- |
 | `src/lib/natlas/config.ts` | Validated env config; enforces the `NCAIR1/` model prefix |
 | `src/lib/natlas/llm.ts` | N-ATLaS LLM client (OpenAI-compatible + HF endpoint), context trimming |
-| `src/lib/natlas/asr.ts` | N-ATLaS ASR client (service + HF router), rejects non-N-ATLaS payloads |
+| `src/lib/natlas/asr.ts` | N-ATLaS ASR client (service transport only), rejects non-N-ATLaS payloads |
 | `src/lib/natlas/tutor-prompt.ts` | The language-tutor system prompt |
 | `src/lib/tutor/turn.ts` | One conversational turn: ASR → guard → level → LLM → guard |
 | `src/lib/tutor/difficulty.ts` | Deterministic level adaptation and the "stuck" signal |

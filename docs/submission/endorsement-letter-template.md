@@ -1,8 +1,13 @@
 # Institutional endorsement letter — template
 
-> NAIC Track A requirement: *"Institutional endorsement letter from Head of
-> Department or equivalent."* It must be **signed** (wet signature or a verified
-> digital signature), on institutional letterhead, and submitted as a PDF scan.
+> NAIC's own words, under *Eligibility → Academia & Research*: *"Institutional
+> endorsement letter signed by Head of Department or equivalent"*, and under
+> *Participation Tracks → Academia & Research → Requirements*: *"Institutional
+> endorsement letter from Head of Department"*.
+>
+> Wet signature versus verified digital signature, institutional letterhead and a PDF
+> scan are **this team's submission-format choices**, not wording from NAIC. NAIC
+> states only that the letter must exist and come from the Head of Department.
 >
 > Replace every bracketed field. Keep it to one page. Do not inflate claims — the
 > panel verifies the artefact anyway.

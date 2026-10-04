@@ -6,6 +6,7 @@
  *   npm run validation:report
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -14,6 +15,42 @@ const LOG_DIR = path.join(ROOT, process.env.LOG_DIR ?? 'data');
 const OUT_DIR = path.join(ROOT, 'validation');
 const OUT_FILE = path.join(OUT_DIR, 'REPORT.md');
 const REQUIRED = 50;
+
+const DEFAULT_BASE_URL = 'https://n-atlas-voice-tutor-deltaos-core.vercel.app';
+
+function loadDotEnv(file) {
+  try {
+    for (const line of readFileSync(file, 'utf8').split('\n')) {
+      const match = line.match(/^([A-Z][A-Z0-9_]*)=(.*)$/);
+      if (!match) continue;
+      const value = match[2].trim();
+      if (value && !value.startsWith('#') && process.env[match[1]] === undefined) {
+        process.env[match[1]] = value;
+      }
+    }
+  } catch {
+    // no .env.local is fine
+  }
+}
+
+/** Falls back to the deployment, because the production app logs to postgres. */
+async function readFromDeployment() {
+  const base = (process.env.BASE_URL ?? DEFAULT_BASE_URL).replace(/\/$/, '');
+  const token = process.env.ADMIN_TOKEN;
+  if (!token) return { rows: [], queried: false, note: 'ADMIN_TOKEN is not set' };
+  const url = `${base}/api/export?format=json&token=${encodeURIComponent(token)}`;
+  try {
+    const response = await fetch(url, { headers: { accept: 'application/json' } });
+    if (!response.ok) {
+      return { rows: [], queried: false, note: `${base}/api/export answered ${response.status}` };
+    }
+    const payload = await response.json();
+    const rows = Array.isArray(payload.rows) ? payload.rows : [];
+    return { rows, queried: true, note: `${base} (${rows.length} rows, postgres driver)` };
+  } catch (error) {
+    return { rows: [], queried: false, note: `could not reach ${base}: ${error.message}` };
+  }
+}
 
 async function readJsonl(file) {
   try {
@@ -61,9 +98,17 @@ function toRows(entries) {
 }
 
 async function main() {
-  const rows = (await readJsonl(path.join(LOG_DIR, 'interactions.jsonl'))).sort((a, b) =>
-    a.timestamp.localeCompare(b.timestamp),
-  );
+  loadDotEnv(path.join(ROOT, '.env.local'));
+  let rows = await readJsonl(path.join(LOG_DIR, 'interactions.jsonl'));
+  let source = path.relative(ROOT, path.join(LOG_DIR, 'interactions.jsonl'));
+
+  if (rows.length === 0) {
+    const deployed = await readFromDeployment();
+    rows = deployed.rows;
+    if (rows.length > 0) source = deployed.note;
+  }
+
+  rows = rows.sort((a, b) => String(a.timestamp).localeCompare(String(b.timestamp)));
 
   await mkdir(OUT_DIR, { recursive: true });
 
@@ -71,15 +116,20 @@ async function main() {
     const placeholder = [
       '# Real-world validation report',
       '',
-      '> **Status: not yet generated.** No interactions were found in `' + path.relative(ROOT, LOG_DIR) + '`.',
+      '> **Status: not yet generated.** No interactions were found in `' +
+        path.relative(ROOT, LOG_DIR) +
+        '`, and the deployment reported none either.',
       '> Run the tutor, collect real learner sessions, then run `npm run export:csv` and',
-      '> `npm run validation:report` to regenerate this file.',
+      '> `npm run validation:report` to regenerate this file. For the Vercel deployment',
+      '> set `ADMIN_TOKEN` (and `BASE_URL` if not ' + DEFAULT_BASE_URL + ') in `.env.local`.',
       '',
     ].join('\n');
     await writeFile(OUT_FILE, placeholder, 'utf8');
     console.warn(`No interactions found. Wrote a status placeholder to ${path.relative(ROOT, OUT_FILE)}`);
     return;
   }
+
+  console.log(`Source: ${source}`);
 
   const sessions = new Map();
   const weeks = new Map();

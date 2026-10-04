@@ -6,10 +6,10 @@ Deadline: **12 October 2026, 23:59 WAT**. Track A = Academia & Research.
 | --- | --- | --- | --- | --- |
 | 1 | Working artefact (deployed app + public repo) | Deployed and healthy: **`/api/health` returned HTTP 200 `ok: true` on 2026-10-04** with `NCAIR1/N-ATLaS` served by the Modal LLM endpoint and all four `NCAIR1/` ASR checkpoints loaded (Hausa, Igbo, Yoruba, Nigerian-accented English) | [Live application](https://n-atlas-voice-tutor-deltaos-core.vercel.app), this repository | — |
 | 2 | N-ATLaS integration evidence | **Done** | [`docs/n-atlas-integration.md`](../n-atlas-integration.md) | — |
-| 3 | Real-world validation, 50+ interactions | **Tooling done, data outstanding** | `validation/` | real learners |
+| 3 | Real-world validation, 50+ interactions | **Tooling done and verified against the live deployment, data outstanding: 0 completed interactions.** 5 turns are logged and all 5 failed at ASR | `validation/`, `validation/interactions-2026-10-04.csv` | real learners, and the ASR token fix below |
 | 4 | Technical documentation | **Done** | `README.md`, [`architecture.md`](../architecture.md), [`deployment.md`](../deployment.md), [`limitations.md`](../limitations.md) | — |
-| 5 | Video demonstration, 3-5 min | Script written, **not recorded** | [`demo-video-script.md`](demo-video-script.md) | a working deployment |
-| 6 | Team profile | Template written, **not filled** | [`team-profile-template.md`](team-profile-template.md) | your names and affiliations |
+| 5 | Video demonstration, 3-5 min | Script written, **not recorded** | [`demo-video-script.md`](demo-video-script.md) | the ASR token fix, so a turn actually completes |
+| 6 | Team profile | **Filled** from `attribution.ts` (3 members, Track A requirement check) — contribution breakdown and signature outstanding | [`team-profile.md`](team-profile.md) | the team, for who-wrote-what and the signature |
 | 7 | Track A endorsement letter | Template written, **not signed** | [`endorsement-letter-template.md`](endorsement-letter-template.md) | Head of Department |
 
 ## Order of work
@@ -35,6 +35,19 @@ record anything.
    `python scripts/evaluate-asr.py`.
 8. **Fill the team profile**, obtain the signed endorsement letter, submit.
 
+## Live defect: the ASR bearer token does not match
+
+`/api/health` returns `ok: true`, but the app's `NATLAS_ASR_API_KEY` and the
+`natlas-hf` Modal secret's `NATLAS_ASR_API_KEY` are different values. `/health` needs
+no token, so health stays green while every `POST /transcribe` returns 401 and
+every voice turn fails — which is what all 5 logged interactions are. This makes
+component 1 not fully working despite the green probe, and it blocks component 5.
+
+Fix: set one new value in both places (`modal secret create natlas-hf`, and the
+Vercel project variable), redeploy the ASR app so it reads the new secret, then
+verify with an **authenticated** `POST /transcribe`. `/api/health` cannot detect
+this class of fault.
+
 ## Compliance traps
 
 - **Do not ship placeholder validation data.** Simulated interactions disqualify
@@ -46,3 +59,8 @@ record anything.
 - **Check the N-ATLaS attribution appears in any public-facing material** that
   shows N-ATLaS output.
 - **Do not exceed 1000 active end-users** without a separate commercial licence.
+- **Do not quote an NAIC requirement the rules do not contain.** The Track A
+  requirements quoted in `team-profile.md` and
+  `endorsement-letter-template.md` are NAIC's own wording; the wet-signature,
+  letterhead and PDF-scan requirements are this team's own submission-format
+  choices and are labelled as such.

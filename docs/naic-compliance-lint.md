@@ -107,7 +107,7 @@ requirement itself.
 | 3 | Real-world validation | ❌ | `validation/` zero rows. |
 | 4 | Technical documentation | ✅ | `README.md`, `docs/architecture.md`, `docs/deployment.md`, `docs/limitations.md`, `docs/tts.md`. |
 | 5 | Video demonstration, 3–5 min | ❌ | `docs/submission/demo-video-script.md` is written and good; unrecorded. Blocked on N1. |
-| 6 | Team profile | ❌ | `docs/submission/team-profile-template.md` — brackets unfilled. |
+| 6 | Team profile | ⚠ | `docs/submission/team-profile.md` — names, affiliations and Track A requirement check filled from `attribution.ts`; contribution breakdown and signature still outstanding. |
 | 7 | Endorsement / registration | ❌ | `docs/submission/endorsement-letter-template.md` — unsigned. Institutional lead time; start today. |
 
 ### 2.5 Track A — Academia & Research
@@ -194,7 +194,7 @@ before recruiting anyone.
 
 **N4. Submission paperwork is unstarted.**
 `endorsement-letter-template.md` still contains `[Name]`, `[Date]` and an unsigned
-block; `team-profile-template.md` has unfilled rows; the demo video is unrecorded
+block; `team-profile.md` still needs the contribution breakdown; the demo video is unrecorded
 **[ran]**. The HoD signature is institutional and has the longest lead time of
 anything you control.
 
@@ -332,7 +332,22 @@ If that fails, nothing downstream will work. Do not proceed past this line.
 
 Two Modal apps in one file, so there is one deploy command.
 
-`deploy/modal_natlas.py`:
+**Status: this section is the design the code grew from, and the deployed files have
+moved on.** What actually runs in production is two files, not one:
+
+| File | What it serves | GPU | Notes |
+| --- | --- | --- | --- |
+| `scripts/modal_llm.py` | `NCAIR1/N-ATLaS` over an OpenAI-compatible API | `L4:1` | `vllm==0.21.0`, CUDA 12.9 |
+| `scripts/modal_asr.py` | this repo's own FastAPI app on port 8000 | `L4:1` | `scaledown_window=300`, `startup_timeout=600` |
+
+Both set **`min_containers=1`**, so neither scales to zero — see §5.7. Both read
+the **`natlas-hf`** Modal secret, which must contain `HF_TOKEN`,
+`NATLAS_LLM_API_KEY` *and* `NATLAS_ASR_API_KEY`. The ASR bearer token is compared
+by `asr-service/app.py::_require_auth`, and `/api/health` does **not** exercise it:
+`/health` needs no token, so a token mismatch shows up as healthy health plus a
+failing `/transcribe`. That is the exact state production was in on 2026-10-04.
+
+The single-file sketch that follows is kept for the reasoning, not as copy-paste:
 
 ```python
 import modal
@@ -422,15 +437,16 @@ def serve_asr():
 Create the secret once, using the HF token that has accepted all five licences:
 
 ```bash
-modal secret create huggingface-token HF_TOKEN=hf_xxxxxxxx
+modal secret create natlas-hf HF_TOKEN=hf_xxxxxxxx NATLAS_LLM_API_KEY=... NATLAS_ASR_API_KEY=...
 ```
 
 Deploy, then read the two URLs off the output:
 
 ```bash
-modal deploy deploy/modal_natlas.py
-# https://<workspace>--natlas-llm-serve-llm.modal.run
-# https://<workspace>--natlas-asr-serve-asr.modal.run
+python -m modal deploy scripts/modal_llm.py
+python -m modal deploy scripts/modal_asr.py
+# https://<workspace>--natlas-llm-server.modal.run      (production: ...us-east.modal.direct)
+# https://<workspace>--natlas-asr-server.modal.run      (production: ...us-east.modal.direct)
 ```
 
 Point the app at them:
@@ -438,21 +454,27 @@ Point the app at them:
 ```bash
 # LLM — the base must include /v1; the client appends /chat/completions
 NATLAS_LLM_PROVIDER=openai-compatible
-NATLAS_LLM_BASE_URL=https://<workspace>--natlas-llm-serve-llm.modal.run/v1
+NATLAS_LLM_BASE_URL=https://<workspace>--natlas-llm-server.modal.direct/v1
 NATLAS_LLM_MODEL=NCAIR1/N-ATLaS
-NATLAS_LLM_API_KEY=
+NATLAS_LLM_API_KEY=the NATLAS_LLM_API_KEY in the natlas-hf secret
 
-# ASR
+# ASR — the key must be the NATLAS_ASR_API_KEY in the same secret, byte for byte
 NATLAS_ASR_PROVIDER=service
-NATLAS_ASR_BASE_URL=https://<workspace>--natlas-asr-serve-asr.modal.run
-NATLAS_ASR_API_KEY=
+NATLAS_ASR_BASE_URL=https://<workspace>--natlas-asr-server.modal.direct
+NATLAS_ASR_API_KEY=the NATLAS_ASR_API_KEY in the natlas-hf secret
 ```
 
 Verify before you open a browser:
 
 ```bash
-curl -s https://<workspace>--natlas-llm-serve-llm.modal.run/v1/models | jq
-curl -s https://<workspace>--natlas-asr-serve-asr.modal.run/health | jq '.models, .loaded'
+curl -s https://<workspace>--natlas-llm-server.modal.direct/v1/models | jq
+curl -s https://<workspace>--natlas-asr-server.modal.direct/health | jq '.models, .loaded'
+
+# /health needs no token, so also prove the token itself:
+curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+  -H "authorization: Bearer $NATLAS_ASR_API_KEY" \
+  -F 'file=@clip.wav' -F 'language=ha' \
+  https://<workspace>--natlas-asr-server.modal.direct/transcribe
 
 # the app's own go/no-go probe:
 curl -s http://localhost:3000/api/health | jq
@@ -519,20 +541,31 @@ Note `--alias NCAIR1/N-ATLaS` — llama.cpp must advertise the official id, beca
 
 ### 5.7 Cost comparison
 
-Assumes ~6 hours of active inference between now and 12 Oct, and the endpoint
-otherwise idle.
+**Corrected 2026-10-04.** The earlier version of this table priced Modal as
+scale-to-zero. Both deployed apps set `min_containers=1`
+(`scripts/modal_llm.py:80`, `scripts/modal_asr.py:79`) precisely so a demo never pays
+a cold start — which means **they bill continuously**. The "$0 when idle" line
+below was wrong, and with it the recommendation that followed from it.
 
-| | Modal (A10G, scale-to-zero) | HF Inference Endpoint (L4, always on) |
+L4 on Modal is roughly $0.80/hr (confirm on modal.com/pricing before spending).
+Two always-on L4 endpoints is therefore roughly $1.60/hr, about $38/day and about
+$1,150 for a month — against a $30/month free credit. That is the single largest
+unbudgeted line in this project.
+
+| | Modal, two always-on L4s (`min_containers=1`) | HF Inference Endpoint (L4, always on) |
 | --- | --- | --- |
-| Rate | $0.000306/s ≈ $1.10/hr | $0.80/hr, billed continuously |
-| 6 h of use | ≈ **$6.60** | $0.80 × every hour it exists |
-| 7 days deployed but idle | ≈ **$0** (scales to zero) | ≈ **$134** |
-| 30 days deployed but idle | ≈ **$0** | ≈ **$576** |
+| Rate | ≈ $0.80/hr each, ≈ $1.60/hr together | ≈ $0.80/hr, billed continuously |
+| 6 h of use | ≈ **$9.60** for the pair | ≈ $4.80 for the LLM endpoint alone |
+| 7 days, left running | ≈ **$269** for the pair | ≈ $134 for the LLM alone |
+| 30 days, left running | ≈ **$1,152** for the pair | ≈ $576 for the LLM alone |
 | Free tier | $30/month; up to $10k academic | none |
-| Cold start | 2–3 min after scale-down | none |
+| Cold start | avoided by `min_containers=1` | none |
 
-Not close. Modal's per-hour rate is comparable and it charges nothing when idle,
-which is exactly the shape of your usage.
+**Decision needed before 12 Oct.** Either accept ~$38/day for a demo-ready stack,
+or drop `min_containers=1` and accept a multi-minute vLLM cold start on the first
+turn of the demo video, or collapse to one always-on endpoint and self-host the
+LLM, keeping only the ASR warm. What must not happen is leaving both running
+unnoticed on the assumption that they are free.
 ---
 
 ### 5.8 Gotchas that will actually cost you hours
@@ -592,7 +625,7 @@ served, so smoke-test the deployed service before inviting learners:
 
 ```bash
 curl -s -F 'file=@validation/asr-samples/hausa/hausa-001.wav' -F 'language=ha' \
-  https://<workspace>--natlas-asr-serve-asr.modal.run/transcribe | jq
+  https://<workspace>--natlas-asr-server.modal.direct/transcribe | jq
 ```
 
 Expect `model: "NCAIR1/Hausa-ASR"`. Anything else means the deployment is
@@ -609,13 +642,18 @@ Step 5 of the previous plan (close A4, A5, B6, B7, B9) is **done** — see §4,
 *Resolved*. The Next.js app is already deployed, which moves the real work forward
 without reducing it, because the deployed app cannot currently serve a turn.
 
-1. **Before anything else, stop the data loss.** Set `LOG_DRIVER=postgres` and
-   `DATABASE_URL`, run `psql "$DATABASE_URL" -f scripts/schema.sql`, and confirm a
-   row actually lands. The current `jsonl`-on-Vercel setup discards every
-   interaction on the next deploy. (N3, G7)
+1. ~~**Stop the data loss.**~~ **Done**: `LOG_DRIVER=postgres` and `DATABASE_URL` are
+   set on Vercel, `scripts/schema.sql` is applied, and 5 turns are readable through
+   `GET /api/export`. (N3, G7)
+0. **Rotate the ASR service token.** The app's `NATLAS_ASR_API_KEY` and the
+   `natlas-hf` secret's `NATLAS_ASR_API_KEY` do not match, so `/transcribe` returns
+   401 and every voice turn fails while `/api/health` stays green. Set one new value
+   in both places, redeploy the ASR app so it picks up the secret, then verify with
+   an authenticated `POST /transcribe` — not with `/api/health`.
 2. **Then fix inference.** Accept the five HF licences, create the `natlas-hf`
-   Modal secret, deploy `scripts/modal_llm.py`, then write the ASR wrapper. Point
-   both Vercel variables at the resulting URLs. (§5.3, §5.4, N1)
+   Modal secret, deploy `scripts/modal_llm.py` and `scripts/modal_asr.py`, and point
+   both Vercel variables at the resulting URLs. **Done 2026-10-03** — but see step 0.
+   (§5.3, §5.4, N1)
 3. **Then verify from outside.** `GET /api/health` must report `ok: true` with at
    least three loaded `NCAIR1/` checkpoints. Until it does, record nothing.
 4. **Then recruit — today, in parallel.** Steps 1–3 are code; recruitment is people,
@@ -641,31 +679,38 @@ because an unfixed log driver makes every hour of validation work unrecoverable.
 was absent from the working tree at the start of this audit, so the documented step
 would have failed (defect A3, corrected).
 
-`.env.example` has been restored and extended with the Modal values from §5.4 and
-the traps from §5.8 written into the comments: the `/v1` requirement on the LLM
-base URL, the five gated repos that must be accepted before any download works, the
-fact that `hf-router` cannot work, and the warning that Vercel's ephemeral
-filesystem makes `LOG_DRIVER=jsonl` unsafe there.
+`.env.example` is tracked and complete, and its comments carry the traps from §5.8:
+the `/v1` requirement on the LLM base URL, the five gated repos that must be accepted
+before any download works, and the warning that Vercel's ephemeral filesystem makes
+`LOG_DRIVER=jsonl` unsafe there. (This paragraph previously claimed a comment about
+`hf-router` that was never written; there is no `hf-router` anywhere in the repo.)
 
-`.gitignore` was also tightened: it carried a catch-all `.env*` alongside the three
-explicit patterns. That catch-all would drop the template from version control if it
-were ever removed from the index and re-added. It is replaced by `.env`,
-`.env.local`, `.env.*.local` plus a `!.env.example` negation.
+`.gitignore` keeps **both** the catch-all `.env*` (line 31) and the explicit
+`.env`, `.env.local`, `.env.*.local` patterns, with `!.env.example` last. An earlier
+version of this document claimed the catch-all had been replaced; it was not. The
+current ordering works because `!.env.example` is the last matching rule, so the
+template stays tracked while `.env.local` and `.env.modal` stay ignored — both of
+which are ignored today, verified with `git check-ignore -v`.
 
 ---
 
 ## 7. One-paragraph summary
 
-The engineering is done and it is good; the integration is real, enforced and
-documented better than most entries will manage. Lint, types and build all pass.
-What is missing is not code: the app is not deployed and there are zero of the 50
-required user interactions, and the second of those is the only item on the list
-that cannot be finished in a day. Three smaller defects matter — the public
-`/validation` page, the `hf-router` transport that cannot work because the models
-are gated and unserved, and the disagreement between the README and the submission
-checklist about whether anything is live. For compute, use Modal for both the LLM
-and the ASR service; it is roughly the same hourly rate as Hugging Face Inference
-Endpoints and it costs nothing while idle, which is the whole shape of your usage.
-The Hugging Face models are gated and are not served by any Inference Provider, so
-accept all five licences first, and remember that the served model name must be
-`NCAIR1/N-ATLaS` and the LLM base URL must end in `/v1`.
+**Rewritten 2026-10-04; the previous version of this paragraph was stale and
+contradicted §0, §1 and §4 of this same file.** The app **is** deployed
+(`deltaos-core/n-atlas-voice-tutor`, auto-deploying from `main`) and both N-ATLaS
+inference endpoints run on Modal. `GET /api/health` returns HTTP 200 `ok: true` with
+`NCAIR1/N-ATLaS` served and four `NCAIR1/` ASR checkpoints loaded. The engineering
+is real: the integration is enforced in three independent places, lint, types and
+build pass, and the ASR service refuses to load anything outside `NCAIR1/`.
+
+What is missing is evidence, and one broken link in the chain. **Zero of the 50
+required real user interactions are complete.** Five turns are logged and all five
+failed at the ASR step, because the ASR bearer token on the app does not match the
+token in the `natlas-hf` Modal secret — every `/transcribe` returns 401 while
+`/health`, which needs no token, stays green. That is the first thing to fix, and
+`/api/health` alone will never reveal it, so probe `/transcribe` with the token
+before recording anything. Then record the video, recruit learners, export the
+evidence (`npm run export:csv` now pulls from the deployment), fill the team profile
+and obtain the signed Head of Department letter. Also decide the compute bill:
+both Modal apps pin `min_containers=1`, so they are never free while idle.

@@ -62,10 +62,10 @@ client — is split at the quietest boundary by the ASR service
 **Code:** `src/lib/natlas/llm.ts` → `completeWithNatlas()`.
 **Call sites (each marked with a comment in the source):**
 
-| File | Marker |
+| File | Marker comment to search for |
 | --- | --- |
-| `src/lib/tutor/turn.ts:126` | `// ---- N-ATLaS LLM INVOCATION #2 (official NCAIR1/N-ATLaS weights) ----` |
-| `src/app/api/tutor/route.ts:100` | `// N-ATLaS LLM INVOCATION (official NCAIR1/N-ATLaS weights).` |
+| `src/lib/tutor/turn.ts` | `N-ATLaS LLM INVOCATION #2 (official NCAIR1/N-ATLaS weights)` |
+| `src/app/api/tutor/route.ts` | `N-ATLaS LLM INVOCATION (official NCAIR1/N-ATLaS weights).` |
 
 Two transports are supported, both serving the same official weights:
 
@@ -106,10 +106,10 @@ curl -s http://localhost:3000/api/tutor \
 **Code:** `src/lib/natlas/asr.ts` → `transcribeWithNatlas()`.
 **Call sites:**
 
-| File | Marker |
+| File | Marker comment to search for |
 | --- | --- |
-| `src/lib/tutor/turn.ts:100` | `// ---- N-ATLaS ASR INVOCATION #1 (official NCAIR1 ASR checkpoint) ----` |
-| `src/app/api/asr/route.ts:44` | `// N-ATLaS ASR INVOCATION (official NCAIR1/<Language>-ASR checkpoint).` |
+| `src/lib/tutor/turn.ts` | `N-ATLaS ASR INVOCATION #1 (official NCAIR1 ASR checkpoint)` |
+| `src/app/api/asr/route.ts` | `N-ATLaS ASR INVOCATION (official NCAIR1/<Language>-ASR checkpoint).` |
 
 The **`service`** transport uses the FastAPI service in `asr-service/`, which
 loads the NCAIR1 repos directly with `transformers` on a GPU. There is no
@@ -170,7 +170,10 @@ The app displays the model-card attribution for every checkpoint it uses:
   the configured model ids plus the ASR service's loaded `NCAIR1/` checkpoints.
 - Every row of `validation/interactions-*.csv` carries `asrModel`, `llmModel` and
   both latencies. If a submission wrapped a different model, those columns would
-  not read `NCAIR1/…`.
+  not read `NCAIR1/…`. Today that file holds **5 rows, all of them failed turns**
+  with empty model columns: the deployed ASR service was rejecting audio because
+  its bearer token did not match. It is evidence of the guard working, not of a
+  completed session — see `validation/README.md`.
 
 ---
 

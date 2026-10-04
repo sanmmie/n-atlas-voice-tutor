@@ -83,7 +83,8 @@ recorded model evidence comes from the server and cannot be forged by the browse
   lines on forest green, Yorùbá adire indigo patterning. Switching re-themes the
   whole UI instantly.
 - **Voice-first interaction.** One large microphone target, clear recording state,
-  live level meter, auto-stop at the ASR checkpoint's 25-second cap.
+  live level meter, auto-stop at the app's own 25-second cap (the checkpoints'
+  hard window is 30 s, so the cap leaves headroom).
 - **Live transcript panel.** Every turn is on screen: accessibility, lesson review,
   and a safety net when ASR mishears a word.
 - **Adaptive difficulty.** Beginner → intermediate → advanced from observable
@@ -96,8 +97,8 @@ recorded model evidence comes from the server and cannot be forged by the browse
   connection type. The admin-token-protected dashboard and export are available
   at `/validation` and `/api/export`.
 - **Guest mode.** No account, no login wall. Progress lives in `localStorage`.
-- **Low bandwidth.** No web fonts, no icon library, ~99 kB first load, compressed
-  audio upload, text-first fallback.
+- **Low bandwidth.** No web fonts, no icon library, ~99 kB first load on the landing
+  page and ~103 kB in a session, compressed audio upload, text-first fallback.
 - **Typed fallback.** For desktop judges and devices without a usable microphone —
   typed turns skip ASR and are logged as typed, so the CSV stays honest.
 
@@ -138,7 +139,8 @@ Documentation: [`docs/architecture.md`](docs/architecture.md) ·
 - Node.js 18.18+ (developed on Node 24)
 - An N-ATLaS LLM endpoint (self-hosted `llama-server` / vLLM / Modal, or a Hugging
   Face Inference Endpoint)
-- The N-ATLaS ASR service on a GPU box
+- The N-ATLaS ASR service on a GPU host — production runs it on Modal via
+  `scripts/modal_asr.py`
 - A Hugging Face token that has accepted the gated N-ATLaS licence conditions
 
 ### 1. N-ATLaS LLM
@@ -191,10 +193,15 @@ curl -s http://localhost:3000/api/tutor -H 'content-type: application/json' \
 ### 5. Collect validation evidence
 
 ```bash
-npm run export:csv          # data/interactions.jsonl -> validation/interactions-<date>.csv
+npm run export:csv          # -> validation/interactions-<date>.csv
 npm run validation:report   # -> validation/REPORT.md
-python scripts/evaluate-asr.py --service http://127.0.0.1:8000   # -> validation/asr-accuracy.md
+python scripts/evaluate-asr.py --service https://<asr-host> --token "$NATLAS_ASR_API_KEY"
 ```
+
+Both npm scripts read the local jsonl log when it exists and otherwise pull the
+evidence from the running deployment's `/api/export` (the production app logs to
+postgres, whose filesystem is ephemeral). They read `ADMIN_TOKEN` and `BASE_URL`
+from `.env.local`, so no extra flags are needed against the live site.
 
 NAIC Problem Statement 02 requires **at least 50 documented real learner
 interactions**. See [`validation/README.md`](validation/README.md) for the
@@ -209,8 +216,8 @@ that evidence.
 | `npm run build` / `npm start` | Production build and server |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
-| `npm run export:csv` | Interaction log → `validation/*.csv` |
-| `npm run validation:report` | Interaction log → `validation/REPORT.md` |
+| `npm run export:csv` | Interaction log (local jsonl, else the deployment) → `validation/*.csv` |
+| `npm run validation:report` | Same sources → `validation/REPORT.md` |
 | `python scripts/evaluate-asr.py` | ASR accuracy table from recorded clips |
 
 ## Known limitations (short version)

@@ -203,6 +203,21 @@ checkpoints before you record the demo video or invite validation learners. The
 public page can load while this endpoint is unhealthy; only `ok: true` confirms
 the inference stack is ready.
 
+**`/api/health` is necessary but not sufficient.** It probes the ASR service's
+`/health`, which is unauthenticated, so it stays green when `NATLAS_ASR_API_KEY` on
+the app does not match the token in the `natlas-hf` Modal secret — and every
+`/transcribe` then returns 401. That is the state production was in on 2026-10-04:
+green health, five failed voice turns. Always confirm the authenticated path too:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X POST \
+  -H "authorization: Bearer $NATLAS_ASR_API_KEY" \
+  -F 'file=@hausa-001.webm' -F 'language=hausa' \
+  https://<app>/api/asr
+```
+
+A `200` there, not a green `/api/health`, is what means a voice turn will work.
+
 ---
 
 ## 5. Operational notes
