@@ -10,11 +10,7 @@ function speakWithBrowser(text: string, language: LanguageCode): boolean {
   const loose = voices.find((voice) => voice.lang?.toLowerCase().startsWith(prefix));
   const voice = exact ?? loose;
 
-  // No matching voice on this device: refuse rather than let the browser read
-  // Hausa/Igbo/Yorùbá text with its English default. Returning false makes
-  // `speak()` return 'none', and the UI shows a text-only badge instead of
-  // playing wrong-language audio.
-  if (!voice) return false;
+  if (!voice) return false; // <── don't let the browser fall back to English
 
   synth.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
