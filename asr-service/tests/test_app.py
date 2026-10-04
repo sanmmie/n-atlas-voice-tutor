@@ -4,7 +4,8 @@ import wave
 import pytest
 from fastapi import HTTPException
 
-from app import assert_official, resolve_language, split_wav
+import app as asr_app
+from app import _auth_verdict, assert_official, resolve_language, split_wav
 
 
 def make_wav(frame_count: int, sample_rate: int = 1_000) -> bytes:
@@ -57,3 +58,42 @@ def test_split_wav_chunks_long_audio_without_losing_frames() -> None:
     assert len(chunks) == 3
     assert sum(wav_frame_count(chunk) for chunk in chunks) == frame_count
     assert all(wav_frame_count(chunk) <= 1_050 for chunk in chunks)
+
+def test_auth_verdict_reports_unset_when_service_has_no_key(monkeypatch) -> None:
+    monkeypatch.setattr(asr_app, "API_KEY", "")
+
+    assert _auth_verdict(None) == "unset"
+
+
+def test_auth_verdict_accepts_the_configured_token(monkeypatch) -> None:
+    monkeypatch.setattr(asr_app, "API_KEY", "s3cret")
+
+    assert _auth_verdict("Bearer s3cret") == "ok"
+
+
+def test_auth_verdict_rejects_a_different_token(monkeypatch) -> None:
+    monkeypatch.setattr(asr_app, "API_KEY", "s3cret")
+
+    assert _auth_verdict("Bearer stale") == "mismatch"
+    assert _auth_verdict(None) == "mismatch"
+
+
+def test_health_reports_a_token_mismatch_instead_of_ok(monkeypatch) -> None:
+    monkeypatch.setattr(asr_app, "API_KEY", "s3cret")
+
+    healthy = asr_app.health(authorization="Bearer s3cret")
+    assert healthy.ok is True
+    assert healthy.auth == "ok"
+
+    drifted = asr_app.health(authorization="Bearer stale")
+    assert drifted.auth == "mismatch"
+    assert drifted.ok is False
+
+
+def test_require_auth_raises_on_mismatch(monkeypatch) -> None:
+    monkeypatch.setattr(asr_app, "API_KEY", "s3cret")
+
+    with pytest.raises(HTTPException) as error:
+        asr_app._require_auth("Bearer stale")
+
+    assert error.value.status_code == 401

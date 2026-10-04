@@ -114,8 +114,22 @@ async function probeAsr(
         detail: `${response.status} ${(await response.text()).slice(0, 200)}`,
       };
     }
-    const payload = (await response.json()) as { models?: string[] };
+    const payload = (await response.json()) as { models?: string[]; auth?: string };
     const models = (payload.models ?? []).filter((id) => id.startsWith('NCAIR1/'));
+
+    // The service reports whether our bearer token matched. Without this check the
+    // probe stayed green while every /transcribe returned 401, because /health is
+    // readable without a token.
+    if (payload.auth === 'mismatch') {
+      return {
+        ok: false,
+        baseUrl,
+        models,
+        detail:
+          'ASR service rejected NATLAS_ASR_API_KEY: the service token and the app token differ, so every /transcribe returns 401.',
+      };
+    }
+
     return {
       ok: models.length >= 3,
       baseUrl,

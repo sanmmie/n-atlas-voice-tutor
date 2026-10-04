@@ -275,6 +275,10 @@ class HealthResponse(BaseModel):
     models: List[str]
     loaded: List[str]
     attribution: str
+    # "ok" when the caller's bearer token matches, "unset" when this service runs
+    # without a key, "mismatch" otherwise. The Next.js health probe requires "ok"
+    # so a token drift shows up in /api/health instead of only in /transcribe.
+    auth: str
 
 
 class TranscribeResponse(BaseModel):
@@ -298,15 +302,20 @@ class BatchResponse(BaseModel):
     results: List[BatchItem]
 
 
-def _require_auth(authorization: Optional[str]) -> None:
+def _auth_verdict(authorization: Optional[str]) -> str:
+    """"unset" when this service runs unprotected, else "ok" or "mismatch"."""
     if not API_KEY:
-        return
-    if authorization != f"Bearer {API_KEY}":
+        return "unset"
+    return "ok" if authorization == f"Bearer {API_KEY}" else "mismatch"
+
+
+def _require_auth(authorization: Optional[str]) -> None:
+    if _auth_verdict(authorization) == "mismatch":
         raise HTTPException(status_code=401, detail="Invalid ASR service token.")
 
 
 @app.get("/health", response_model=HealthResponse)
-def health() -> HealthResponse:
+def health(authorization: Optional[str] = Header(default=None)) -> HealthResponse:
     try:
         import torch
 
@@ -316,9 +325,14 @@ def health() -> HealthResponse:
 
     loaded = [loaded.repo_id for loaded in _MODELS.values()]
     official = sorted(set(MODEL_BY_LANGUAGE.values()))
+    verdict = _auth_verdict(authorization)
 
     return HealthResponse(
-        ok=True,
+        # A caller whose token does not match is being told the service is healthy,
+        # which is how a broken deployment stayed green for hours: /health needed no
+        # token while every /transcribe returned 401.
+        ok=verdict != "mismatch",
+        auth=verdict,
         device=device,
         models=official,
         loaded=loaded,

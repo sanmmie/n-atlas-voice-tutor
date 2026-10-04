@@ -108,6 +108,15 @@ Utterances longer than the checkpoints' 30-second window are split at the
 lowest-amplitude 50 ms near each cut, so words are not sliced in half. `chunks`
 and `chunk_offsets` report where that happened.
 
+### `GET /health`
+
+> Returns the loaded `NCAIR1/` checkpoints, the device, and an `auth` verdict:
+> `ok` when the caller's bearer token matches, `unset` when the service runs
+> without a key, `mismatch` otherwise — in which case `ok` is `false`. The Next.js
+> probe requires `ok: true` and fails on `mismatch`, so a token drift between the
+> app and this service shows up in `/api/health` instead of only in
+> `/transcribe`.
+
 ### `POST /transcribe/batch`
 
 > Several clips in one request, as an alternative to looping `/transcribe`.

@@ -343,9 +343,10 @@ moved on.** What actually runs in production is two files, not one:
 Both set **`min_containers=1`**, so neither scales to zero — see §5.7. Both read
 the **`natlas-hf`** Modal secret, which must contain `HF_TOKEN`,
 `NATLAS_LLM_API_KEY` *and* `NATLAS_ASR_API_KEY`. The ASR bearer token is compared
-by `asr-service/app.py::_require_auth`, and `/api/health` does **not** exercise it:
-`/health` needs no token, so a token mismatch shows up as healthy health plus a
-failing `/transcribe`. That is the exact state production was in on 2026-10-04.
+by `asr-service/app.py::_require_auth`. Until 2026-10-04 `/health` needed no token,
+so a mismatch showed up as healthy health plus a failing `/transcribe` — the exact
+state production was in. `/health` now returns an `auth` verdict and the app's probe
+fails on `mismatch`, but the ASR app must be redeployed for the probe to see it.
 
 The single-file sketch that follows is kept for the reasoning, not as copy-paste:
 

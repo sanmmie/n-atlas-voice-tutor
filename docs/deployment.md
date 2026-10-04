@@ -203,11 +203,15 @@ checkpoints before you record the demo video or invite validation learners. The
 public page can load while this endpoint is unhealthy; only `ok: true` confirms
 the inference stack is ready.
 
-**`/api/health` is necessary but not sufficient.** It probes the ASR service's
-`/health`, which is unauthenticated, so it stays green when `NATLAS_ASR_API_KEY` on
-the app does not match the token in the `natlas-hf` Modal secret — and every
-`/transcribe` then returns 401. That is the state production was in on 2026-10-04:
-green health, five failed voice turns. Always confirm the authenticated path too:
+**`/api/health` also checks the token, but only once the ASR service is redeployed.**
+`/health` used to be readable without a token, so it stayed green when
+`NATLAS_ASR_API_KEY` on the app did not match the token in the `natlas-hf` Modal
+secret, and every `/transcribe` returned 401 — the state production was in on
+2026-10-04, with five failed voice turns behind a green probe. The service now
+reports an `auth` verdict (`ok` / `unset` / `mismatch`) and the app's probe fails
+on `mismatch`, so this fault becomes visible. **A service that has not been
+redeployed since that change returns no `auth` field, and the probe cannot see the
+drift.** Until you have redeployed it, confirm the authenticated path directly:
 
 ```bash
 curl -s -o /dev/null -w '%{http_code}\n' -X POST \

@@ -37,16 +37,21 @@ record anything.
 
 ## Live defect: the ASR bearer token does not match
 
-`/api/health` returns `ok: true`, but the app's `NATLAS_ASR_API_KEY` and the
-`natlas-hf` Modal secret's `NATLAS_ASR_API_KEY` are different values. `/health` needs
-no token, so health stays green while every `POST /transcribe` returns 401 and
-every voice turn fails — which is what all 5 logged interactions are. This makes
-component 1 not fully working despite the green probe, and it blocks component 5.
+The app's `NATLAS_ASR_API_KEY` and the `natlas-hf` Modal secret's
+`NATLAS_ASR_API_KEY` are different values. The `/health` endpoint was readable
+without a token, so `/api/health` reported `ok: true` while every `POST /transcribe`
+returned 401 and every voice turn failed — which is what all 5 logged interactions
+are. This makes component 1 not fully working despite the green probe, and it
+blocks component 5.
 
-Fix: set one new value in both places (`modal secret create natlas-hf`, and the
-Vercel project variable), redeploy the ASR app so it reads the new secret, then
-verify with an **authenticated** `POST /transcribe`. `/api/health` cannot detect
-this class of fault.
+Fix, in this order:
+
+1. Set one new value in both places (`modal secret create natlas-hf`, and the
+   Vercel project variable).
+2. Redeploy the ASR app (`python -m modal deploy scripts/modal_asr.py`) so it reads
+   the new secret **and** serves the `auth` field added to `/health`.
+3. Verify with an authenticated `POST /transcribe`. Only after step 2 does
+   `/api/health` detect this class of fault on its own.
 
 ## Compliance traps
 
