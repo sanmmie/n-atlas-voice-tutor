@@ -76,6 +76,7 @@ app = modal.App(APP_NAME)
     volumes={"/root/.cache/huggingface": hf_cache_vol},
     port=ASR_PORT,
     scaledown_window=300,
+    min_containers=1,
     startup_timeout=600,
     target_concurrency=4,
     unauthenticated=True,

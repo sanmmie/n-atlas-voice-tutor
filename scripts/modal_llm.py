@@ -77,6 +77,7 @@ app = modal.App("natlas-llm")
     },
     port=VLLM_PORT,
     scaledown_window=300,
+    min_containers=1,
     startup_timeout=600,
     target_concurrency=8,
     unauthenticated=True,
