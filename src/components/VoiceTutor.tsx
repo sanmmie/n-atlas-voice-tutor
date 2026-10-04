@@ -39,6 +39,7 @@ export function VoiceTutor({ language }: { language: LanguageCode }) {
   const [typed, setTyped] = useState('');
   const [currentLevel, setCurrentLevel] = useState<Level>('beginner');
   const [prompts, setPrompts] = useState<string[]>(definition.prompts.beginner.slice(0, 2));
+  const [voiceUnavailable, setVoiceUnavailable] = useState(false);
 
   const recorderRef = useRef<RecorderHandle | null>(null);
   const sessionIdRef = useRef<string>('');
@@ -149,6 +150,7 @@ export function VoiceTutor({ language }: { language: LanguageCode }) {
         setState('speaking');
         const ttsEngine: TtsEngine = await speak(data.reply.text, language);
         setState('idle');
+        setVoiceUnavailable(ttsEngine === 'none');
 
         void fetch('/api/log', {
           method: 'POST',
@@ -169,6 +171,7 @@ export function VoiceTutor({ language }: { language: LanguageCode }) {
   const startRecording = useCallback(async () => {
     stopSpeaking();
     setError(null);
+    setVoiceUnavailable(false);
     setState('requesting');
 
     const handle = createRecorder({
@@ -265,6 +268,13 @@ export function VoiceTutor({ language }: { language: LanguageCode }) {
         languageTag={definition.bcp47}
         onRate={rate}
       />
+
+      {voiceUnavailable ? (
+        <p className="px-4 py-2 text-xs text-amber-600">
+          🔇 Voice playback is not available in {definition.endonym} on this device.
+          The reply is shown as text.
+        </p>
+      ) : null}
 
       {prompts.length > 0 && state === 'idle' ? (
         <div className="flex flex-wrap gap-2">
