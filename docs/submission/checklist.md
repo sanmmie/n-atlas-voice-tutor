@@ -4,7 +4,7 @@ Deadline: **12 October 2026, 23:59 WAT**. Track A = Academia & Research.
 
 | # | Component | Status | Where it lives | Blocked on |
 | --- | --- | --- | --- | --- |
-| 1 | Working artefact (deployed app + public repo) | Deployed and healthy: **`/api/health` returned HTTP 200 `ok: true` on 2026-10-04** with `NCAIR1/N-ATLaS` served by the Modal LLM endpoint and all four `NCAIR1/` ASR checkpoints loaded (Hausa, Igbo, Yoruba, Nigerian-accented English) | [Live application](https://n-atlas-voice-tutor-deltaos-core.vercel.app), this repository | — |
+| 1 | Working artefact (deployed app + public repo) | **Deployed; LLM verified, ASR blocked on a token, not on missing models.** Re-verified 2026-10-05 after redeploying both Modal apps: `/api/health` returns **HTTP 503 `degraded`** — `llm.ok: true` with `NCAIR1/N-ATLaS` served by vLLM, `asr.ok: false` because the service rejects `NATLAS_ASR_API_KEY`. All four `NCAIR1/` ASR models are listed and three are preloaded. The earlier **HTTP 200 `ok: true` on 2026-10-04 was a false green**: it predates the auth-aware health gate, which is the only reason the drift is now visible | [Live application](https://n-atlas-voice-tutor-deltaos-core.vercel.app), this repository | — |
 | 2 | N-ATLaS integration evidence | **Done** | [`docs/n-atlas-integration.md`](../n-atlas-integration.md) | — |
 | 3 | Real-world validation, 50+ interactions | **Tooling done and verified against the live deployment, data outstanding: 0 completed interactions.** 5 turns are logged and all 5 failed at ASR | `validation/`, `validation/interactions-2026-10-04.csv` | real learners, and the ASR token fix below |
 | 4 | Technical documentation | **Done** | `README.md`, [`architecture.md`](../architecture.md), [`deployment.md`](../deployment.md), [`limitations.md`](../limitations.md) | — |
@@ -14,11 +14,15 @@ Deadline: **12 October 2026, 23:59 WAT**. Track A = Academia & Research.
 
 ## Order of work
 
-The inference gate is passed, so the remaining work is evidence-gathering, not
-plumbing. `/api/health` was verified at HTTP 200 `ok: true` on 2026-10-04; keep the
-endpoints warm (`python -m modal run scripts/modal_llm.py` and `scripts/modal_asr.py`;
-both scale to zero after 30 idle minutes) and re-check before you
-record anything.
+Both Modal apps were redeployed on 2026-10-05, so the endpoints now scale to zero
+after 30 idle minutes and idle time costs nothing. The consequence is that the first
+request after an idle stretch pays a multi-minute cold start, which the 60 s route
+cannot wait for: warm them minutes ahead with `python -m modal run scripts/modal_llm.py`
+and `scripts/modal_asr.py` before recording anything.
+
+`/api/health` is currently **503 `degraded`**: the LLM check passes and the ASR check
+fails on token drift. Fix that before recruiting learners, because every voice turn
+fails until it is fixed — see the defect section below.
 
 1. ~~**Accept the N-ATLaS licence conditions**~~ — done; `HF_TOKEN` is in the `natlas-hf`
    Modal secret.
@@ -26,9 +30,11 @@ record anything.
    `natlas-llm-server.modal.direct`.
 3. ~~**Stand up the ASR service**~~ — done; `scripts/modal_asr.py`, served at
    `natlas-asr-server.modal.direct`.
-4. ~~**Restore inference health**~~ — done; `GET /api/health` returns `ok: true` with
-   four loaded `NCAIR1/` checkpoints. `ADMIN_TOKEN` is set, so `/api/export` and the
-   `/validation` page are reachable.
+4. **Restore inference health** — half done. The LLM side is verified working
+   (`llm.ok: true`, `NCAIR1/N-ATLaS` via vLLM, `official: true`) and the ASR service
+   loads correctly, but `asr.ok: false` on token drift, so `/api/health` is 503. The
+   token fix below is the whole of what remains. `logDriver` is `postgres`, so logged
+   interactions are being persisted.
 5. **Record the demo video** while the deployment is warm.
 6. **Recruit learners and collect 50+ interactions.** This is the long pole —
    start recruiting the moment step 4 is stable, not after the video is done.
@@ -43,6 +49,12 @@ the supervisor, including two open finance TODOs (confirm a monthly spend cap,
 confirm the academic credit), is [`cost-note.md`](cost-note.md).
 
 ## Live defect: the ASR bearer token does not match
+
+> **Now machine-detected, not inferred.** Since the 2026-10-05 redeploy, the ASR
+> service reports an `auth` verdict on `/health` (`ok`, `unset`, or `mismatch`) and
+> `/api/health` treats `mismatch` as a failure. The production app sends its
+> `NATLAS_ASR_API_KEY`, still gets `mismatch`, and says so in plain words. Do not
+> re-derive this by hand from 401s in a log.
 
 The app's `NATLAS_ASR_API_KEY` and the `natlas-hf` Modal secret's
 `NATLAS_ASR_API_KEY` are different values. The `/health` endpoint was readable
