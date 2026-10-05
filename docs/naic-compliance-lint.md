@@ -671,11 +671,12 @@ without reducing it, because the deployed app cannot currently serve a turn.
 1. ~~**Stop the data loss.**~~ **Done**: `LOG_DRIVER=postgres` and `DATABASE_URL` are
    set on Vercel, `scripts/schema.sql` is applied, and 5 turns are readable through
    `GET /api/export`. (N3, G7)
-0. **Rotate the ASR service token.** The app's `NATLAS_ASR_API_KEY` and the
-   `natlas-hf` secret's `NATLAS_ASR_API_KEY` do not match, so `/transcribe` returns
-   401 and every voice turn fails while `/api/health` stays green. Set one new value
-   in both places, redeploy the ASR app so it picks up the secret, then verify with
-   an authenticated `POST /transcribe` — not with `/api/health`.
+0. ~~**Rotate the ASR service token.**~~ **Done 2026-10-05.** One new random value in
+   the `natlas-hf` secret and in the Vercel production variable, both apps redeployed,
+   Vercel redeployed (an env change does not reach a running deployment otherwise).
+   Verified by an authenticated `POST /transcribe` returning 200, not by `/api/health`
+   — though `/api/health` would now have caught it, since the service reports an
+   `auth` verdict and the probe fails on `mismatch`.
 2. **Then fix inference.** Accept the five HF licences, create the `natlas-hf`
    Modal secret, deploy `scripts/modal_llm.py` and `scripts/modal_asr.py`, and point
    both Vercel variables at the resulting URLs. **Done 2026-10-03** — but see step 0.
@@ -730,15 +731,16 @@ inference endpoints run on Modal. `GET /api/health` returns HTTP 200 `ok: true` 
 is real: the integration is enforced in three independent places, lint, types and
 build pass, and the ASR service refuses to load anything outside `NCAIR1/`.
 
-What is missing is evidence, and one broken link in the chain. **Zero of the 50
-required real user interactions are complete.** Five turns are logged and all five
-failed at the ASR step, because the ASR bearer token on the app does not match the
-token in the `natlas-hf` Modal secret — every `/transcribe` returns 401 while
-`/health`, which needs no token, stays green. That is the first thing to fix, and
-`/api/health` alone will never reveal it, so probe `/transcribe` with the token
-before recording anything. Then record the video, recruit learners, export the
-evidence (`npm run export:csv` now pulls from the deployment), fill the team profile
-and obtain the signed Head of Department letter. Also decide the compute
+What is missing is evidence. **Zero of the 50 required real user interactions are
+complete.** Five turns are logged and all five failed at the ASR step, because the
+ASR bearer token did not match the token in the `natlas-hf` Modal secret — every
+`/transcribe` returned 401 while `/health`, which needs no token, stayed green.
+**That link in the chain was closed on 2026-10-05:** the token was rotated in both
+places, both Modal apps and Vercel were redeployed, and an authenticated
+`POST /transcribe` now returns 200. Nothing technical blocks the submission any
+more; what remains is people and paperwork — record the video, recruit learners,
+export the evidence (`npm run export:csv` now pulls from the deployment), fill the
+team profile and obtain the signed Head of Department letter. Also decide the compute
 bill: both Modal apps now scale to zero after 30 idle minutes, so they are free
 while unused and paid only for actual use — which makes warming them before a
 recording or demo a task, not an optimisation.

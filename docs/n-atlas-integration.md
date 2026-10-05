@@ -173,7 +173,9 @@ The app displays the model-card attribution for every checkpoint it uses:
   not read `NCAIR1/…`. Today that file holds **5 rows, all of them failed turns**
   with empty model columns: the deployed ASR service was rejecting audio because
   its bearer token did not match. It is evidence of the guard working, not of a
-  completed session — see `validation/README.md`.
+  completed session — see `validation/README.md`. The token mismatch itself was
+  fixed on 2026-10-05, so these rows describe a fault that no longer exists; they are
+  kept because deleting real logged turns would be worse than keeping them.
 
 ---
 

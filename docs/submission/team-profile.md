@@ -52,8 +52,8 @@ is transcribed by the official N-ATLaS speech checkpoints (`NCAIR1/Hausa-ASR`,
 can be substituted. Yorúbá is honestly the weakest language: N-ATLaS scores it 2.69/5
 in its own evaluation, and the interface labels it "weak" rather than hiding it. Real
 learner validation is the outstanding requirement — 0 of the 50 documented interactions
-are complete, and the ASR bearer token on the deployment is being fixed so that turns
-complete at all.
+are complete. The ASR bearer token that was failing every voice turn was rotated and
+verified on 2026-10-05, so turns complete now and recruitment can begin.
 
 ## Contribution breakdown
 

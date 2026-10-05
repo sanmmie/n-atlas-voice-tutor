@@ -239,6 +239,11 @@ A `200` there, not a green `/api/health`, is what means a voice turn will work.
   The same commands are the post-deploy verification: each waits for `/health` and
   then exercises the model. Set `min_containers=1` on both if a cold start during a
   judged run is worse than the ~$38/day it costs.
+
+  **Measured on 2026-10-05: 2.5 minutes** from a cold LLM to serving the first token,
+  and roughly 30 seconds for the ASR service. Warm at least five minutes ahead, and
+  expect `/api/health` to report `degraded` with `llm.ok: false` during a cold start —
+  that is the cold start, not a fault.
 - **Set `maxDuration`** high enough for a cold LLM (60 s in the route exports). On
   Vercel Hobby this exceeds the platform limit — use a warm endpoint.
 - **Do not log audio.** The app sends audio to the ASR service and discards it; the

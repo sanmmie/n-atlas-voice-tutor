@@ -25,10 +25,12 @@ times the free credit our platform gives us. We found it and turned it off on
 ## What "switch themselves off" means for you
 
 The first time someone uses the app after a break of 30 minutes or more, the
-servers need a few minutes to start up before they can answer. Nothing is broken
-— they are waking up. So **tell whoever is running the demo a few minutes before
-you want to record it or run a practice session**, and they will start the
-servers for you in advance. *(TODO: agree who on the team handles this.)*
+servers need to start up before they can answer — we measured **2.5 minutes** for the
+AI server on 5 October 2026. Nothing is broken, they are waking up. So **tell whoever
+is running the demo at least five minutes before you want to record it or run a
+practice session**, and they will start the servers for you in advance. Health checks
+will look "degraded" during that warm-up; that is the wait, not a fault.
+*(TODO: agree who on the team handles this.)*
 
 ## Money facts worth knowing
 
