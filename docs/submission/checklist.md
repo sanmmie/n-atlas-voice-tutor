@@ -36,6 +36,12 @@ record anything.
    `python scripts/evaluate-asr.py`.
 8. **Fill the team profile**, obtain the signed endorsement letter, submit.
 
+**Cost.** Idle is $0 and one demo hour is ≈ $1.60; the setting that would have
+left two GPU endpoints running 24/7 at ≈ $38/day is off, and the endpoints must
+be redeployed for that to take effect. The plain-language version for the team and
+the supervisor, including two open finance TODOs (confirm a monthly spend cap,
+confirm the academic credit), is [`cost-note.md`](cost-note.md).
+
 ## Live defect: the ASR bearer token does not match
 
 The app's `NATLAS_ASR_API_KEY` and the `natlas-hf` Modal secret's

@@ -550,22 +550,28 @@ would never pay a cold start, and therefore billed continuously. The second vers
 corrected that, which was also wrong in practice: ~$38/day for two always-on L4s
 against a $30/month credit is not a plan anyone will actually keep. **As of
 2026-10-04 both apps scale to zero** — `min_containers` removed,
-`scaledown_window=30 * MINUTES` in both `scripts/modal_llm.py` and
+`scaledown_window=30 * 60` in both `scripts/modal_llm.py` and
 `scripts/modal_asr.py`. An endpoint nobody is demonstrating to now costs nothing.
 
-L4 on Modal is roughly $0.80/hr (confirm on modal.com/pricing before spending).
-Only time a container is actually up is billed, so the number that matters is hours
-of use plus the 30-minute idle window each endpoint sits through after its last
-request.
+**Prices verified against modal.com/pricing on 2026-10-05.** An L4 is
+$0.000222/sec, which is $0.80/hr. Modal's own FAQ states that the scale-down
+window *is* billed and that nothing is charged once the app has scaled to zero
+— the “idle is $0” row below rests on that sentence, not on assumption. CPU
+($0.0000131/core/sec, 0.125-core minimum) and memory ($0.00000222/GiB/sec) are
+metered on top of the card, so treat $0.80/hr as a floor and check the first real
+invoice. The Starter plan's $30/month credit and the “up to $10k” academic grant
+are also from that page; the 3-seat Starter limit is a real constraint on a 5-person
+team if more than 3 people ever need Modal access. The plain-language version for
+team members and the supervisor is `docs/submission/cost-note.md`.
 
 | | Modal, two L4s, scale to zero (current) | Modal, two always-on L4s (rejected) | HF Inference Endpoint (L4, always on) |
 | --- | --- | --- | --- |
 | Rate | ≈ $0.80/hr each, only while up | ≈ $1.60/hr together | ≈ $0.80/hr, billed continuously |
 | Idle | **$0** | ≈ $38/day | ≈ $19/day |
 | 6 h of actual use | ≈ **$9.60** for the pair | ≈ $9.60 | ≈ $4.80 for the LLM alone |
-| 7 days, one 1 h demo a day | ≈ **$6–8** for the pair | ≈ $269 | ≈ $134 for the LLM alone |
+| 7 days, one 1 h demo a day | ≈ **$11** use, ≈ **$17** with scale-down lag | ≈ $269 | ≈ $134 for the LLM alone |
 | 7 days, left running | ≈ **$0** | ≈ $269 | ≈ $134 |
-| 30 days, one 1 h demo a day | ≈ **$48–72** for the pair | ≈ $1,152 | ≈ $576 for the LLM alone |
+| 30 days, one 1 h demo a day | ≈ **$48** use, ≈ **$72** with scale-down lag | ≈ $1,152 | ≈ $576 for the LLM alone |
 | Free tier | $30/month; up to $10k academic | $30/month | none |
 | Cold start | minutes, on the first turn after 30 idle minutes | avoided by `min_containers=1` | none |
 
